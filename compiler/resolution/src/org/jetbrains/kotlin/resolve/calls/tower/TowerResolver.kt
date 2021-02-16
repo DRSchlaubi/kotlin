@@ -141,7 +141,7 @@ class TowerResolver {
                         )
                     }
 
-                    getImplicitReceiver(scope)?.let {
+                    getImplicitReceivers(scope).forEach {
                         addLevel(
                             MemberScopeTowerLevel(this@createNonLocalLevels, it),
                             it.mayFitForName(name)
@@ -194,9 +194,9 @@ class TowerResolver {
                             .process(scope.mayFitForName(name))?.let { return it }
                     }
 
-                    implicitScopeTower.getImplicitReceiver(scope)
-                        ?.let { processImplicitReceiver(it, resolveExtensionsForImplicitReceiver) }
-                        ?.let { return it }
+                    implicitScopeTower.getImplicitReceivers(scope).forEach { rv ->
+                        processImplicitReceiver(rv, resolveExtensionsForImplicitReceiver)?.let { return it }
+                    }
                 } else {
                     TowerData.TowerLevel(ImportingScopeBasedTowerLevel(implicitScopeTower, scope as ImportingScope))
                         .process(scope.mayFitForName(name))?.let { return it }

@@ -369,10 +369,8 @@ class NewResolutionOldInference(
     ) : ImplicitScopeTower {
         private val cache = HashMap<ReceiverValue, ReceiverValueWithSmartCastInfo>()
 
-        override fun getImplicitReceiver(scope: LexicalScope): ReceiverValueWithSmartCastInfo? =
-            scope.implicitReceiver?.value?.let {
-                cache.getOrPut(it) { resolutionContext.transformToReceiverWithSmartCastInfo(it) }
-            }
+        override fun getImplicitReceivers(scope: LexicalScope): List<ReceiverValueWithSmartCastInfo> =
+            scope.implicitReceivers.map { cache.getOrPut(it.value) { resolutionContext.transformToReceiverWithSmartCastInfo(it.value) } }
 
         override val lexicalScope: LexicalScope get() = resolutionContext.scope
 

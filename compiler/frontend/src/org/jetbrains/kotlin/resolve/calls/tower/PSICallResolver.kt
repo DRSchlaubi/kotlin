@@ -403,13 +403,8 @@ class PSICallResolver(
         override val implicitsResolutionFilter: ImplicitsExtensionsResolutionFilter get() = this@PSICallResolver.implicitsResolutionFilter
         private val cache = HashMap<ReceiverParameterDescriptor, ReceiverValueWithSmartCastInfo>()
 
-        override fun getImplicitReceiver(scope: LexicalScope): ReceiverValueWithSmartCastInfo? {
-            val implicitReceiver = scope.implicitReceiver ?: return null
-
-            return cache.getOrPut(implicitReceiver) {
-                context.transformToReceiverWithSmartCastInfo(implicitReceiver.value)
-            }
-        }
+        override fun getImplicitReceivers(scope: LexicalScope): List<ReceiverValueWithSmartCastInfo> =
+            scope.implicitReceivers.map { cache.getOrPut(it) { context.transformToReceiverWithSmartCastInfo(it.value) } }
 
         override fun interceptFunctionCandidates(
             resolutionScope: ResolutionScope,

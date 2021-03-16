@@ -10541,6 +10541,12 @@ public class DiagnosticTestGenerated extends AbstractDiagnosticTest {
                 }
 
                 @Test
+                @TestMetadata("noContextReceiversOnInlineClasses.kt")
+                public void testNoContextReceiversOnInlineClasses() throws Exception {
+                    runTest("compiler/testData/diagnostics/tests/extensions/contextReceivers/noContextReceiversOnInlineClasses.kt");
+                }
+
+                @Test
                 @TestMetadata("noExplicitReceiver.kt")
                 public void testNoExplicitReceiver() throws Exception {
                     runTest("compiler/testData/diagnostics/tests/extensions/contextReceivers/noExplicitReceiver.kt");

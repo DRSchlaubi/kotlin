@@ -668,30 +668,6 @@ internal object CheckReceivers : ResolutionPart() {
         resolveKotlinArgument(receiverArgument, receiverParameter, receiverInfo)
     }
 
-    private fun KotlinResolutionCandidate.searchForAdditionalReceivers(): List<SimpleKotlinCallArgument>? {
-        val result = mutableListOf<ReceiverValueWithSmartCastInfo>()
-        val candidateReceivers = scopeTower.lexicalScope.parentsWithSelf
-            .flatMap { if (it is LexicalScope) scopeTower.getImplicitReceivers(it) else emptyList() }
-
-        fun KotlinType.prepared(): KotlinType = if (containsTypeParameter()) replaceArgumentsWithStarProjections() else this
-
-        for (receiver in candidateDescriptor.contextReceiverParameters) {
-            val expectedReceiverType = receiver.type
-            val expectedReceiverTypeClosestBound =
-                if (expectedReceiverType.isTypeParameter()) expectedReceiverType.supertypes().first()
-                else expectedReceiverType
-            val selectedCandidate = candidateReceivers.firstOrNull { candidateReceiver ->
-                val candidateReceiverType = candidateReceiver.receiverValue.type
-                NewKotlinTypeChecker.Default.isSubtypeOf(candidateReceiverType.prepared(), expectedReceiverTypeClosestBound.prepared())
-            } ?: run {
-                this.diagnosticsFromResolutionParts.add(NoContextReceiver(receiver))
-                return null
-            }
-            result.add(selectedCandidate)
-        }
-        return result.map { ReceiverExpressionKotlinCallArgument(it) }
-    }
-
     override fun KotlinResolutionCandidate.process(workIndex: Int) {
         when (workIndex) {
             0 -> checkReceiver(
@@ -706,20 +682,10 @@ internal object CheckReceivers : ResolutionPart() {
                     shouldCheckImplicitInvoke = false, // reproduce old inference behaviour
                 )
             }
-            else -> {
-                resolvedCall.contextReceiversArguments = searchForAdditionalReceivers() ?: return
-                for (i in resolvedCall.contextReceiversArguments.indices) {
-                    checkReceiver(
-                        resolvedCall.contextReceiversArguments[i],
-                        candidateDescriptor.contextReceiverParameters[i],
-                        shouldCheckImplicitInvoke = false
-                    )
-                }
-            }
         }
     }
 
-    override fun KotlinResolutionCandidate.workCount() = 3
+    override fun KotlinResolutionCandidate.workCount() = 2
 }
 
 internal object CheckArgumentsInParenthesis : ResolutionPart() {
@@ -806,6 +772,59 @@ internal object ErrorDescriptorResolutionPart : ResolutionPart() {
 
         kotlinCall.externalArgument?.let {
             resolveKotlinArgument(it, null, ReceiverInfo.notReceiver)
+        }
+    }
+}
+
+internal object CheckContextReceiversResolutionPart : ResolutionPart() {
+    private fun KotlinResolutionCandidate.checkReceiver(
+        receiverArgument: SimpleKotlinCallArgument?,
+        receiverParameter: ReceiverParameterDescriptor?
+    ) {
+        if ((receiverArgument == null) != (receiverParameter == null)) {
+            error("Inconsistency receiver state for call $kotlinCall and candidate descriptor: $candidateDescriptor")
+        }
+        if (receiverArgument == null || receiverParameter == null) return
+        val receiverInfo = ReceiverInfo(
+            isReceiver = true,
+            shouldReportUnsafeCall = true,
+            reportUnsafeCallAsUnsafeImplicitInvoke = false
+        )
+
+        resolveKotlinArgument(receiverArgument, receiverParameter, receiverInfo)
+    }
+
+    private fun KotlinResolutionCandidate.searchForAdditionalReceivers(): List<SimpleKotlinCallArgument>? {
+        val result = mutableListOf<ReceiverValueWithSmartCastInfo>()
+        val candidateReceivers = scopeTower.lexicalScope.parentsWithSelf
+            .flatMap { if (it is LexicalScope) scopeTower.getImplicitReceivers(it) else emptyList() }
+
+        fun KotlinType.prepared(): KotlinType = if (containsTypeParameter()) replaceArgumentsWithStarProjections() else this
+
+        for (receiver in candidateDescriptor.contextReceiverParameters) {
+            val expectedReceiverType = receiver.type
+            val expectedReceiverTypeClosestBound =
+                if (expectedReceiverType.isTypeParameter()) expectedReceiverType.supertypes().first()
+                else expectedReceiverType
+            val selectedCandidate = candidateReceivers.firstOrNull { candidateReceiver ->
+                val candidateReceiverType = candidateReceiver.receiverValue.type
+                NewKotlinTypeChecker.Default.isSubtypeOf(candidateReceiverType.prepared(), expectedReceiverTypeClosestBound.prepared())
+            } ?: run {
+                this.diagnosticsFromResolutionParts.add(NoContextReceiver(receiver))
+                return null
+            }
+            result.add(selectedCandidate)
+        }
+        return result.map { ReceiverExpressionKotlinCallArgument(it) }
+    }
+
+    override fun KotlinResolutionCandidate.process(workIndex: Int) {
+        resolvedCall.contextReceiversArguments = searchForAdditionalReceivers() ?: return
+        for (i in resolvedCall.contextReceiversArguments.indices) {
+            checkReceiver(
+                resolvedCall.contextReceiversArguments[i],
+                candidateDescriptor.contextReceiverParameters[i]
+            )
         }
     }
 }

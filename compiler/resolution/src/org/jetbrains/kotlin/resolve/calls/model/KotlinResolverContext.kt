@@ -214,7 +214,8 @@ enum class KotlinCallKind(vararg resolutionPart: ResolutionPart) {
         CollectionTypeVariableUsagesInfo,
         CheckExplicitReceiverKindConsistency,
         CheckReceivers,
-        PostponedVariablesInitializerResolutionPart
+        PostponedVariablesInitializerResolutionPart,
+        CheckContextReceiversResolutionPart
     ),
     FUNCTION(
         CheckVisibility,
@@ -233,7 +234,8 @@ enum class KotlinCallKind(vararg resolutionPart: ResolutionPart) {
         EagerResolveOfCallableReferences,
         CompatibilityOfTypeVariableAsIntersectionTypePart,
         CompatibilityOfPartiallyApplicableSamConversion,
-        PostponedVariablesInitializerResolutionPart
+        PostponedVariablesInitializerResolutionPart,
+        CheckContextReceiversResolutionPart
     ),
     INVOKE(*FUNCTION.resolutionSequence.toTypedArray()),
     UNSUPPORTED();

@@ -160,7 +160,7 @@ public class BodyResolver {
                         descriptor, localContext != null ? localContext.inferenceSession : null
                 ),
                 scope -> new LexicalScopeImpl(
-                        scope, descriptor, scope.isOwnerDescriptorAccessibleByLabel(), scope.getImplicitReceivers(),
+                        scope, descriptor, scope.isOwnerDescriptorAccessibleByLabel(), scope.getImplicitReceiver(), scope.getContextReceiversGroup(),
                         LexicalScopeKind.CONSTRUCTOR_HEADER
                 ),
                 localContext
@@ -437,7 +437,7 @@ public class BodyResolver {
     ) {
         // Initializing a scope will report errors if any.
         new LexicalScopeImpl(
-                scopeForConstructorResolution, descriptor, true, Collections.emptyList(), LexicalScopeKind.CLASS_HEADER,
+                scopeForConstructorResolution, descriptor, true, null, Collections.emptyList(), LexicalScopeKind.CLASS_HEADER,
                 new TraceBasedLocalRedeclarationChecker(trace, overloadChecker),
                 new Function1<LexicalScopeImpl.InitializeHandler, Unit>() {
                     @Override
@@ -770,8 +770,8 @@ public class BodyResolver {
             LexicalScope originalScope,
             ConstructorDescriptor unsubstitutedPrimaryConstructor
     ) {
-        return new LexicalScopeImpl(originalScope, unsubstitutedPrimaryConstructor, false, Collections.emptyList(),
-                                    LexicalScopeKind.DEFAULT_VALUE, LocalRedeclarationChecker.DO_NOTHING.INSTANCE,
+        return new LexicalScopeImpl(originalScope, unsubstitutedPrimaryConstructor, false, null,
+                                    Collections.emptyList(), LexicalScopeKind.DEFAULT_VALUE, LocalRedeclarationChecker.DO_NOTHING.INSTANCE,
                                     handler -> {
                                         for (ValueParameterDescriptor valueParameter : unsubstitutedPrimaryConstructor.getValueParameters()) {
                                             handler.addVariableDescriptor(valueParameter);
@@ -853,12 +853,7 @@ public class BodyResolver {
         LexicalScope accessorDeclaringScope = c.getDeclaringScope(accessor);
         assert accessorDeclaringScope != null : "Scope for accessor " + accessor.getText() + " should exists";
         LexicalScope headerScope = ScopeUtils.makeScopeForPropertyHeader(accessorDeclaringScope, descriptor);
-        List<ReceiverParameterDescriptor> implicitReceivers = new ArrayList<>();
-        ReceiverParameterDescriptor extensionReceiverParameter = descriptor.getExtensionReceiverParameter();
-        if (extensionReceiverParameter != null) {
-            implicitReceivers.add(extensionReceiverParameter);
-        }
-        return new LexicalScopeImpl(headerScope, descriptor, true, implicitReceivers,
+        return new LexicalScopeImpl(headerScope, descriptor, true, descriptor.getExtensionReceiverParameter(), descriptor.getContextReceiverParameters(),
                                     LexicalScopeKind.PROPERTY_ACCESSOR_BODY);
     }
 
@@ -1018,8 +1013,8 @@ public class BodyResolver {
             PropertyAccessorDescriptor accessorDescriptor = (PropertyAccessorDescriptor) functionDescriptor;
             KtProperty property = (KtProperty) function.getParent();
             SyntheticFieldDescriptor fieldDescriptor = new SyntheticFieldDescriptor(accessorDescriptor, property);
-            innerScope = new LexicalScopeImpl(innerScope, functionDescriptor, true, Collections.emptyList(),
-                                              LexicalScopeKind.PROPERTY_ACCESSOR_BODY,
+            innerScope = new LexicalScopeImpl(innerScope, functionDescriptor, true, null,
+                                              Collections.emptyList(), LexicalScopeKind.PROPERTY_ACCESSOR_BODY,
                                               LocalRedeclarationChecker.DO_NOTHING.INSTANCE, handler -> {
                                                   handler.addVariableDescriptor(fieldDescriptor);
                                                   return Unit.INSTANCE;

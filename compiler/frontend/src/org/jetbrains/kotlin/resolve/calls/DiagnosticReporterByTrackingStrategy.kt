@@ -99,6 +99,15 @@ class DiagnosticReporterByTrackingStrategy(
                     )
                 )
             }
+            MultipleArgumentsApplicableForContextReceiver::class.java -> {
+                val callElement = psiKotlinCall.psiCall.callElement
+                trace.report(
+                    MULTIPLE_ARGUMENTS_APPLICABLE_FOR_CONTEXT_RECEIVER.on(
+                        callElement,
+                        (diagnostic as MultipleArgumentsApplicableForContextReceiver).receiverDescriptor.value.toString()
+                    )
+                )
+            }
         }
     }
 

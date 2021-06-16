@@ -35,7 +35,9 @@ import org.jetbrains.kotlin.types.TypeApproximator
 interface ImplicitScopeTower {
     val lexicalScope: LexicalScope
 
-    fun getImplicitReceivers(scope: LexicalScope): List<ReceiverValueWithSmartCastInfo>
+    fun getImplicitReceiver(scope: LexicalScope): ReceiverValueWithSmartCastInfo?
+
+    fun getContextReceivers(scope: LexicalScope): List<ReceiverValueWithSmartCastInfo>
 
     val dynamicScope: MemberScope
 

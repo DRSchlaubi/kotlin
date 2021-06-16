@@ -267,6 +267,12 @@ class NoContextReceiver(val receiverDescriptor: ReceiverParameterDescriptor) : K
     }
 }
 
+class MultipleArgumentsApplicableForContextReceiver(val receiverDescriptor: ReceiverParameterDescriptor) : KotlinCallDiagnostic(INAPPLICABLE) {
+    override fun report(reporter: DiagnosticReporter) {
+        reporter.onCall(this)
+    }
+}
+
 class AdaptedCallableReferenceIsUsedWithReflection(
     val argument: CallableReferenceKotlinCallArgument,
 ) : KotlinCallDiagnostic(RESOLVED_WITH_ERROR) {

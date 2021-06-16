@@ -67,20 +67,9 @@ public class FunctionDescriptorUtil {
             @NotNull FunctionDescriptor descriptor,
             @NotNull LocalRedeclarationChecker redeclarationChecker
     ) {
-        List<ReceiverParameterDescriptor> implicitReceivers = new ArrayList<>();
-        ReceiverParameterDescriptor extensionReceiverParameter = descriptor.getExtensionReceiverParameter();
-        if (descriptor.getExtensionReceiverParameter() != null) {
-            implicitReceivers.add(extensionReceiverParameter);
-        }
-        List<ReceiverParameterDescriptor> contextReceiverParameters = descriptor.getContextReceiverParameters();
-        if (!contextReceiverParameters.isEmpty()) {
-            implicitReceivers.addAll(
-                    Lists.reverse(contextReceiverParameters)
-            );
-        }
         return new LexicalScopeImpl(
-                outerScope, descriptor, true, implicitReceivers,
-                LexicalScopeKind.FUNCTION_INNER_SCOPE, redeclarationChecker,
+                outerScope, descriptor, true, descriptor.getExtensionReceiverParameter(),
+                descriptor.getContextReceiverParameters(), LexicalScopeKind.FUNCTION_INNER_SCOPE, redeclarationChecker,
                 handler -> {
                     for (TypeParameterDescriptor typeParameter : descriptor.getTypeParameters()) {
                         handler.addClassifierDescriptor(typeParameter);

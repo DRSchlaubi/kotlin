@@ -38,10 +38,7 @@ import org.jetbrains.kotlin.resolve.calls.callResolverUtil.isInfixCall
 import org.jetbrains.kotlin.resolve.calls.callUtil.createLookupLocation
 import org.jetbrains.kotlin.resolve.calls.context.*
 import org.jetbrains.kotlin.resolve.calls.inference.BuilderInferenceSupport
-import org.jetbrains.kotlin.resolve.calls.model.KotlinCallDiagnostic
-import org.jetbrains.kotlin.resolve.calls.model.MutableResolvedCall
-import org.jetbrains.kotlin.resolve.calls.model.ResolvedCallImpl
-import org.jetbrains.kotlin.resolve.calls.model.VariableAsFunctionResolvedCallImpl
+import org.jetbrains.kotlin.resolve.calls.model.*
 import org.jetbrains.kotlin.resolve.calls.results.OverloadResolutionResultsImpl
 import org.jetbrains.kotlin.resolve.calls.results.ResolutionResultsHandler
 import org.jetbrains.kotlin.resolve.calls.results.ResolutionStatus
@@ -489,6 +486,16 @@ class NewResolutionOldInference(
                 createDiagnosticsForCandidate(towerCandidate, candidateCall)
             }
         }
+
+        /**
+         * The function is called only inside [NoExplicitReceiverScopeTowerProcessor] with [TowerData.BothTowerLevelAndContextReceiversGroup].
+         * This case involves only [SimpleCandidateFactory].
+         */
+        override fun createCandidate(
+            towerCandidate: CandidateWithBoundDispatchReceiver,
+            explicitReceiverKind: ExplicitReceiverKind,
+            extensionReceiverCandidates: List<ReceiverValueWithSmartCastInfo>
+        ): MyCandidate = error("${this::class.simpleName} doesn't support candidates with multiple extension receiver candidates")
 
         private fun createDiagnosticsForCandidate(
             towerCandidate: CandidateWithBoundDispatchReceiver,

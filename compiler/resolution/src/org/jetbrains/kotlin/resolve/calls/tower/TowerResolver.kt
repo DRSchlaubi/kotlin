@@ -46,6 +46,12 @@ interface CandidateFactory<out C : Candidate> {
         explicitReceiverKind: ExplicitReceiverKind,
         extensionReceiver: ReceiverValueWithSmartCastInfo?
     ): C
+
+    fun createCandidate(
+        towerCandidate: CandidateWithBoundDispatchReceiver,
+        explicitReceiverKind: ExplicitReceiverKind,
+        extensionReceiverCandidates: List<ReceiverValueWithSmartCastInfo>
+    ): C
 }
 
 interface CandidateFactoryProviderForInvoke<C : Candidate> {

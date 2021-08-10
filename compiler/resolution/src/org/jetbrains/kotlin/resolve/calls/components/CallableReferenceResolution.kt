@@ -270,6 +270,17 @@ class CallableReferencesCandidateFactory(
         return createReferenceCandidate()
     }
 
+    /**
+     * The function is called only inside [NoExplicitReceiverScopeTowerProcessor] with [TowerData.BothTowerLevelAndContextReceiversGroup].
+     * This case involves only [SimpleCandidateFactory].
+     */
+    override fun createCandidate(
+        towerCandidate: CandidateWithBoundDispatchReceiver,
+        explicitReceiverKind: ExplicitReceiverKind,
+        extensionReceiverCandidates: List<ReceiverValueWithSmartCastInfo>
+    ): CallableReferenceCandidate =
+        error("${this::class.simpleName} doesn't support candidates with multiple extension receiver candidates")
+
     private fun needCompatibilityResolveForCallableReference(
         callableReferenceAdaptation: CallableReferenceAdaptation?,
         candidate: CallableDescriptor

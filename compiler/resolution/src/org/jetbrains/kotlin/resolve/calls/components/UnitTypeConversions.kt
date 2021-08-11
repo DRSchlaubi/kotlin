@@ -76,6 +76,7 @@ object UnitTypeConversions : ParameterTypeConversion {
             candidate.callComponents.builtIns,
             expectedParameterType.annotations,
             expectedParameterType.getReceiverTypeFromFunctionType(),
+            expectedParameterType.getContextReceiverTypesFromFunctionType(),
             expectedParameterType.getValueParameterTypesFromFunctionType().map { it.type },
             parameterNames = null,
             candidate.callComponents.builtIns.nullableAnyType,

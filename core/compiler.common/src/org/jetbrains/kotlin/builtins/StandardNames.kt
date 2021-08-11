@@ -108,6 +108,7 @@ object StandardNames {
         @JvmField val deprecationLevel: FqName = fqName("DeprecationLevel")
         @JvmField val replaceWith: FqName = fqName("ReplaceWith")
         @JvmField val extensionFunctionType: FqName = fqName("ExtensionFunctionType")
+        @JvmField val contextFunctionTypeParams: FqName = fqName("ContextFunctionTypeParams")
         @JvmField val parameterName: FqName = fqName("ParameterName")
         @JvmField val annotation: FqName = fqName("Annotation")
         @JvmField val target: FqName = annotationName("Target")

@@ -71,7 +71,8 @@ open class SymbolTable(
     @Suppress("LeakingThis")
     val lazyWrapper = IrLazySymbolTable(this)
 
-    protected abstract class SymbolTableBase<D : DeclarationDescriptor, B : IrSymbolOwner, S : IrBindableSymbol<D, B>>(val lock: IrLock) {
+    @Suppress("DuplicatedCode")
+    private abstract class SymbolTableBase<D : DeclarationDescriptor, B : IrSymbolOwner, S : IrBindableSymbol<D, B>>(val lock: IrLock) {
         val unboundSymbols = linkedSetOf<S>()
 
         abstract fun get(d: D): S?
@@ -81,13 +82,9 @@ open class SymbolTable(
 
         inline fun declare(d: D, createSymbol: () -> S, createOwner: (S) -> B): B {
             synchronized(lock) {
-                @Suppress("UNCHECKED_CAST")
-                val d0 = d.original as D
-                assert(d0 === d) {
-                    "Non-original descriptor in declaration: $d\n\tExpected: $d0"
-                }
-                val existing = get(d0)
+                val existing = get(d)
                 val symbol = if (existing == null) {
+                    checkOriginal(d)
                     val new = createSymbol()
                     set(new)
                     new
@@ -99,7 +96,6 @@ open class SymbolTable(
             }
         }
 
-        @OptIn(ObsoleteDescriptorBasedAPI::class)
         inline fun declare(sig: IdSignature, createSymbol: () -> S, createOwner: (S) -> B): B {
             synchronized(lock) {
                 val existing = get(sig)
@@ -118,13 +114,9 @@ open class SymbolTable(
 
         inline fun declareIfNotExists(d: D, createSymbol: () -> S, createOwner: (S) -> B): B {
             synchronized(lock) {
-                @Suppress("UNCHECKED_CAST")
-                val d0 = d.original as D
-                assert(d0 === d) {
-                    "Non-original descriptor in declaration: $d\n\tExpected: $d0"
-                }
-                val existing = get(d0)
+                val existing = get(d)
                 val symbol = if (existing == null) {
+                    checkOriginal(d)
                     val new = createSymbol()
                     set(new)
                     new
@@ -138,13 +130,9 @@ open class SymbolTable(
 
         inline fun declare(sig: IdSignature, d: D?, createSymbol: () -> S, createOwner: (S) -> B): B {
             synchronized(lock) {
-                @Suppress("UNCHECKED_CAST")
-                val d0 = d?.original as D
-                assert(d0 === d) {
-                    "Non-original descriptor in declaration: $d\n\tExpected: $d0"
-                }
                 val existing = get(sig)
                 val symbol = if (existing == null) {
+                    checkOriginal(d)
                     val new = createSymbol()
                     set(new)
                     new
@@ -156,36 +144,11 @@ open class SymbolTable(
             }
         }
 
-        inline fun declareIfNotExists(sig: IdSignature, d: D?, createSymbol: () -> S, createOwner: (S) -> B): B {
-            synchronized(lock) {
-                @Suppress("UNCHECKED_CAST")
-                val d0 = d?.original as D
-                assert(d0 === d) {
-                    "Non-original descriptor in declaration: $d\n\tExpected: $d0"
-                }
-                val existing = get(sig)
-                val symbol = if (existing == null) {
-                    val new = createSymbol()
-                    set(new)
-                    new
-                } else {
-                    if (!existing.isBound) unboundSymbols.remove(existing)
-                    existing
-                }
-                return if (symbol.isBound) symbol.owner else createOwner(symbol)
-            }
-        }
-
-
         inline fun referenced(d: D, reg: Boolean = true, orElse: () -> S): S {
             synchronized(lock) {
-                @Suppress("UNCHECKED_CAST")
-                val d0 = d.original as D
-                assert(d0 === d) {
-                    "Non-original descriptor in declaration: $d\n\tExpected: $d0"
-                }
-                val s = get(d0)
+                val s = get(d)
                 if (s == null) {
+                    checkOriginal(d)
                     val new = orElse()
                     if (reg) {
                         assert(unboundSymbols.add(new)) {
@@ -199,7 +162,6 @@ open class SymbolTable(
             }
         }
 
-        @OptIn(ObsoleteDescriptorBasedAPI::class)
         inline fun referenced(sig: IdSignature, reg: Boolean = true, orElse: () -> S): S {
             synchronized(lock) {
                 return get(sig) ?: run {
@@ -212,6 +174,14 @@ open class SymbolTable(
                     set(new)
                     new
                 }
+            }
+        }
+
+        private fun checkOriginal(d: D?) {
+            @Suppress("UNCHECKED_CAST")
+            val d0 = d?.original as D
+            assert(d0 === d) {
+                "Non-original descriptor in declaration: $d\n\tExpected: $d0"
             }
         }
     }
@@ -417,10 +387,6 @@ open class SymbolTable(
         )
     }
 
-    private fun createAnonymousInitializerSymbol(descriptor: ClassDescriptor): IrAnonymousInitializerSymbol {
-        return IrAnonymousInitializerSymbolImpl(descriptor)
-    }
-
     fun declareAnonymousInitializer(
         startOffset: Int,
         endOffset: Int,
@@ -553,7 +519,10 @@ open class SymbolTable(
         )
     }
 
-    fun declareConstructorIfNotExists(descriptor: ClassConstructorDescriptor, constructorFactory: (IrConstructorSymbol) -> IrConstructor): IrConstructor =
+    fun declareConstructorIfNotExists(
+        descriptor: ClassConstructorDescriptor,
+        constructorFactory: (IrConstructorSymbol) -> IrConstructor,
+    ): IrConstructor =
         constructorSymbolTable.declareIfNotExists(
             descriptor,
             { createConstructorSymbol(descriptor) },
@@ -806,20 +775,6 @@ open class SymbolTable(
     override fun referenceTypeAlias(descriptor: TypeAliasDescriptor): IrTypeAliasSymbol =
         typeAliasSymbolTable.referenced(descriptor) { createTypeAliasSymbol(descriptor) }
 
-    fun declareTypeAliasFromLinker(
-        descriptor: TypeAliasDescriptor,
-        sig: IdSignature,
-        factory: (IrTypeAliasSymbol) -> IrTypeAlias
-    ): IrTypeAlias {
-        return typeAliasSymbolTable.run {
-            if (sig.isPubliclyVisible) {
-                declare(sig, descriptor, { IrTypeAliasPublicSymbolImpl(sig, descriptor) }, factory)
-            } else {
-                declare(descriptor, { IrTypeAliasSymbolImpl(descriptor) }, factory)
-            }
-        }
-    }
-
     override fun referenceTypeAliasFromLinker(sig: IdSignature) =
         typeAliasSymbolTable.run {
             if (sig.isPubliclyVisible) referenced(sig, false) { IrTypeAliasPublicSymbolImpl(sig) }
@@ -941,18 +896,6 @@ open class SymbolTable(
         return globalTypeParameterSymbolTable.declare(sig, symbolFactory, typeParameterFactory)
     }
 
-    fun declareGlobalTypeParameterFromLinker(
-        descriptor: TypeParameterDescriptor,
-        sig: IdSignature,
-        typeParameterFactory: (IrTypeParameterSymbol) -> IrTypeParameter
-    ): IrTypeParameter {
-        return globalTypeParameterSymbolTable.declare(
-            descriptor,
-            { if (sig.isPubliclyVisible) IrTypeParameterPublicSymbolImpl(sig, descriptor) else IrTypeParameterSymbolImpl(descriptor) },
-            typeParameterFactory
-        )
-    }
-
     @OptIn(ObsoleteDescriptorBasedAPI::class)
     fun declareScopedTypeParameter(
         startOffset: Int,
@@ -986,7 +929,13 @@ open class SymbolTable(
         sig: IdSignature,
         typeParameterFactory: (IrTypeParameterSymbol) -> IrTypeParameter
     ): IrTypeParameter {
-        return scopedTypeParameterSymbolTable.declare(descriptor, { if (sig.isPubliclyVisible) IrTypeParameterPublicSymbolImpl(sig, descriptor) else IrTypeParameterSymbolImpl(descriptor) }, typeParameterFactory)
+        return scopedTypeParameterSymbolTable.declare(
+            descriptor,
+            {
+                if (sig.isPubliclyVisible) IrTypeParameterPublicSymbolImpl(sig, descriptor)
+                else IrTypeParameterSymbolImpl(descriptor)
+            }, typeParameterFactory
+        )
     }
 
     val unboundTypeParameters: Set<IrTypeParameterSymbol> get() = globalTypeParameterSymbolTable.unboundSymbols

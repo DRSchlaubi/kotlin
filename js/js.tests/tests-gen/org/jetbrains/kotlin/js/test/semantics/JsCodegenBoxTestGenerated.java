@@ -10840,6 +10840,19 @@ public class JsCodegenBoxTestGenerated extends AbstractJsCodegenBoxTest {
             public void testAllFilesPresentInContextReceivers() throws Exception {
                 KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/codegen/box/extensionFunctions/contextReceivers"), Pattern.compile("^(.+)\\.kt$"), null, TargetBackend.JS, true);
             }
+
+            @TestMetadata("compiler/testData/codegen/box/extensionFunctions/contextReceivers/fromKEEP")
+            @TestDataPath("$PROJECT_ROOT")
+            @RunWith(JUnit3RunnerWithInners.class)
+            public static class FromKEEP extends AbstractJsCodegenBoxTest {
+                private void runTest(String testDataFilePath) throws Exception {
+                    KotlinTestUtils.runTest0(this::doTest, TargetBackend.JS, testDataFilePath);
+                }
+
+                public void testAllFilesPresentInFromKEEP() throws Exception {
+                    KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/codegen/box/extensionFunctions/contextReceivers/fromKEEP"), Pattern.compile("^(.+)\\.kt$"), null, TargetBackend.JS, true);
+                }
+            }
         }
     }
 

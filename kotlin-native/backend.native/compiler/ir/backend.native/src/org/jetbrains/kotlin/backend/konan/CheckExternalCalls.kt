@@ -38,15 +38,30 @@ private class CallsChecker(val context: Context, goodFunctions: List<String>) {
         return false
     }
 
-    private fun externalFunction(name: String, type: LLVMTypeRef) =
-            context.llvm.externalFunction(name, type, context.stdlibModule.llvmSymbolOrigin)
-
     private fun moduleFunction(name: String) =
             LLVMGetNamedFunction(context.llvmModule, name) ?: throw IllegalStateException("$name function is not available")
 
-    val getMethodImpl = externalFunction("class_getMethodImplementation", functionType(pointerType(functionType(voidType, false)), false, int8TypePtr, int8TypePtr))
-    val getClass = externalFunction("object_getClass", functionType(int8TypePtr, false, int8TypePtr))
-    val getSuperClass = externalFunction("class_getSuperclass", functionType(int8TypePtr, false, int8TypePtr))
+    val getMethodImpl = context.llvm.externalFunction(LlvmFunction(
+        "class_getMethodImplementation",
+        AttributedLlvmType(pointerType(functionType(voidType, false))),
+        listOf(AttributedLlvmType(int8TypePtr), AttributedLlvmType(int8TypePtr)),
+        origin = context.stdlibModule.llvmSymbolOrigin)
+    )
+
+    val getClass = context.llvm.externalFunction(LlvmFunction(
+            "object_getClass",
+            AttributedLlvmType(int8TypePtr),
+            listOf(AttributedLlvmType(int8TypePtr)),
+            origin = context.stdlibModule.llvmSymbolOrigin)
+    )
+
+    val getSuperClass = context.llvm.externalFunction(LlvmFunction(
+            "class_getSuperclass",
+            AttributedLlvmType(int8TypePtr),
+            listOf(AttributedLlvmType(int8TypePtr)),
+            origin = context.stdlibModule.llvmSymbolOrigin)
+    )
+
     val checkerFunction = moduleFunction("Kotlin_mm_checkStateAtExternalFunctionCall")
 
     private data class ExternalCallInfo(val name: String?, val calledPtr: LLVMValueRef)

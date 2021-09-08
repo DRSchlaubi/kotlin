@@ -22,18 +22,21 @@ internal open class ObjCCodeGenerator(val codegen: CodeGenerator) {
     }
 
     private val objcMsgSend = constPointer(
-            context.llvm.externalFunction(
+            context.llvm.externalFunction(LlvmFunction(
                     "objc_msgSend",
-                    functionType(int8TypePtr, true, int8TypePtr, int8TypePtr),
-                    context.stdlibModule.llvmSymbolOrigin
-            )
+                    AttributedLlvmType(int8TypePtr),
+                    listOf(AttributedLlvmType(int8TypePtr), AttributedLlvmType(int8TypePtr)),
+                    isVararg = true,
+                    origin = context.stdlibModule.llvmSymbolOrigin
+            ))
     )
 
-    val objcRelease = context.llvm.externalFunction(
+    val objcRelease = context.llvm.externalFunction(LlvmFunction(
             "objc_release",
-            functionType(voidType, false, int8TypePtr),
-            context.stdlibModule.llvmSymbolOrigin
-    )
+            AttributedLlvmType(voidType),
+            listOf(AttributedLlvmType(int8TypePtr)),
+            origin = context.stdlibModule.llvmSymbolOrigin
+    ))
 
     val objcAlloc = context.llvm.externalFunction(
             "objc_alloc",

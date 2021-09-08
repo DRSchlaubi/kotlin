@@ -1642,11 +1642,12 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
         } else {
             // e.g. ObjCObject, ObjCObjectBase etc.
             if (dstClass.isObjCMetaClass()) {
-                val isClass = context.llvm.externalFunction(
+                val isClass = context.llvm.externalFunction(LlvmFunction(
                         "object_isClass",
-                        functionType(int8Type, false, int8TypePtr),
-                        context.standardLlvmSymbolsOrigin
-                )
+                        AttributedLlvmType(int8Type),
+                        listOf(AttributedLlvmType(int8TypePtr)),
+                        origin = context.standardLlvmSymbolsOrigin
+                ))
 
                 call(isClass, listOf(objCObject)).let {
                     functionGenerationContext.icmpNe(it, Int8(0).llvm)
@@ -2391,12 +2392,12 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
 
         val annotation = irClass.annotations.findAnnotation(externalObjCClassFqName)!!
         val protocolGetterName = annotation.getAnnotationStringValue("protocolGetter")
-        val protocolGetter = context.llvm.externalFunction(
+        val protocolGetter = context.llvm.externalFunction(LlvmFunction(
                 protocolGetterName,
-                functionType(int8TypePtr, false),
-                irClass.llvmSymbolOrigin,
+                AttributedLlvmType(int8TypePtr),
+                origin = irClass.llvmSymbolOrigin,
                 independent = true // Protocol is header-only declaration.
-        )
+        ))
 
         return call(protocolGetter, emptyList())
     }

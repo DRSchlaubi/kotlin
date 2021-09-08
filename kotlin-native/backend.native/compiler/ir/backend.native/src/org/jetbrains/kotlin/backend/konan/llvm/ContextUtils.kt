@@ -178,9 +178,7 @@ internal interface ContextUtils : RuntimeAware {
         get() {
             assert(this.isReal)
             return if (isExternal(this)) {
-                runtime.addedLLVMExternalFunctions.getOrPut(this) { context.llvm.externalFunction(this.computeSymbolName(), getLlvmFunctionType(this),
-                        origin = this.llvmSymbolOrigin) }
-
+                runtime.addedLLVMExternalFunctions.getOrPut(this) { context.llvm.externalFunction(LlvmFunction(this)) }
             } else {
                 context.llvmDeclarations.forFunctionOrNull(this)?.llvmFunction
             }
@@ -310,18 +308,12 @@ internal class Llvm(val context: Context, val llvmModule: LLVMModuleRef) {
         return result
     }
 
-    internal fun externalFunction(
-            name: String,
-            type: LLVMTypeRef,
-            origin: CompiledKlibModuleOrigin,
-            independent: Boolean = false
-    ): LLVMValueRef {
-        this.imports.add(origin, onlyBitcode = independent)
-
-        val found = LLVMGetNamedFunction(llvmModule, name)
+    internal fun externalFunction(llvmFunction: LlvmFunction): LLVMValueRef {
+        this.imports.add(llvmFunction.origin, onlyBitcode = llvmFunction.independent)
+        val found = LLVMGetNamedFunction(llvmModule, llvmFunction.name)
         if (found != null) {
-            assert(getFunctionType(found) == type) {
-                "Expected: ${LLVMPrintTypeToString(type)!!.toKString()} " +
+            assert(getFunctionType(found) == llvmFunction.llvmFunctionType) {
+                "Expected: ${LLVMPrintTypeToString(llvmFunction.llvmFunctionType)!!.toKString()} " +
                         "found: ${LLVMPrintTypeToString(getFunctionType(found))!!.toKString()}"
             }
             assert(LLVMGetLinkage(found) == LLVMLinkage.LLVMExternalLinkage)
@@ -329,26 +321,10 @@ internal class Llvm(val context: Context, val llvmModule: LLVMModuleRef) {
         } else {
             // As exported functions are written in C++ they assume sign extension for promoted types -
             // mention that in attributes.
-            val function = addLlvmFunctionWithDefaultAttributes(context, llvmModule, name, type)
-            return memScoped {
-                val paramCount = LLVMCountParamTypes(type)
-                val paramTypes = allocArray<LLVMTypeRefVar>(paramCount)
-                LLVMGetParamTypes(type, paramTypes)
-                (0 until paramCount).forEach { index ->
-                    val paramType = paramTypes[index]
-                    addFunctionSignext(function, index + 1, paramType)
-                }
-                val returnType = LLVMGetReturnType(type)
-                addFunctionSignext(function, 0, returnType)
-                function
-            }
+            val function = addLlvmFunctionWithDefaultAttributes(context, llvmModule, llvmFunction.name, llvmFunction.llvmFunctionType)
+            llvmFunction.addAttributes(function)
+            return function
         }
-    }
-
-    private fun externalNounwindFunction(name: String, type: LLVMTypeRef, origin: CompiledKlibModuleOrigin): LLVMValueRef {
-        val function = externalFunction(name, type, origin)
-        setFunctionNoUnwind(function)
-        return function
     }
 
     val imports get() = context.llvmImports
@@ -562,27 +538,35 @@ internal class Llvm(val context: Context, val llvmModule: LLVMModuleRef) {
         else -> "__gxx_personality_v0"
     }
 
-    val cxxStdTerminate = externalNounwindFunction(
+    val cxxStdTerminate = externalFunction(LlvmFunction(
             "_ZSt9terminatev", // mangled C++ 'std::terminate'
-            functionType(voidType, false),
+            returnType = AttributedLlvmType(voidType),
+            functionAttributes = listOf(LlvmAttribute.NoUnwind),
             origin = context.standardLlvmSymbolsOrigin
-    )
+    ))
 
-    val gxxPersonalityFunction = externalNounwindFunction(
+    val gxxPersonalityFunction = externalFunction(LlvmFunction(
             personalityFunctionName,
-            functionType(int32Type, true),
+            returnType = AttributedLlvmType(int32Type),
+            functionAttributes = listOf(LlvmAttribute.NoUnwind),
+            isVararg = true,
             origin = context.standardLlvmSymbolsOrigin
-    )
-    val cxaBeginCatchFunction = externalNounwindFunction(
+    ))
+
+    val cxaBeginCatchFunction = externalFunction(LlvmFunction(
             "__cxa_begin_catch",
-            functionType(int8TypePtr, false, int8TypePtr),
+            returnType = AttributedLlvmType(int8TypePtr),
+            functionAttributes = listOf(LlvmAttribute.NoUnwind),
+            parameterTypes = listOf(AttributedLlvmType(int8TypePtr)),
             origin = context.standardLlvmSymbolsOrigin
-    )
-    val cxaEndCatchFunction = externalNounwindFunction(
+    ))
+
+    val cxaEndCatchFunction = externalFunction(LlvmFunction(
             "__cxa_end_catch",
-            functionType(voidType, false),
+            returnType = AttributedLlvmType(voidType),
+            functionAttributes = listOf(LlvmAttribute.NoUnwind),
             origin = context.standardLlvmSymbolsOrigin
-    )
+    ))
 
     val memsetFunction = importMemset()
     //val memcpyFunction = importMemcpy()

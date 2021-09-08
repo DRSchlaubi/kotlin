@@ -115,13 +115,12 @@ internal open class ObjCExportCodeGeneratorBase(codegen: CodeGenerator) : ObjCCo
     val rttiGenerator = RTTIGenerator(context)
 
     private val objcTerminate: LLVMValueRef by lazy {
-        context.llvm.externalFunction(
+        context.llvm.externalFunction(LlvmFunction(
                 "objc_terminate",
-                functionType(voidType, false),
-                CurrentKlibModuleOrigin
-        ).also {
-            setFunctionNoUnwind(it)
-        }
+                AttributedLlvmType(voidType),
+                functionAttributes = listOf(LlvmAttribute.NoUnwind),
+                origin = CurrentKlibModuleOrigin
+        ))
     }
 
     fun dispose() {
@@ -678,6 +677,10 @@ private fun ObjCExportCodeGeneratorBase.buildWritableTypeInfoValue(
 private val ObjCExportCodeGenerator.kotlinToObjCFunctionType: LLVMTypeRef
     get() = functionType(int8TypePtr, false, codegen.kObjHeaderPtr)
 
+// TODO: Ugly and duplicates getter above. Maybe introduce AttributedFunctionType(AttributedLlvmType, List<AttributedLlvmType>)?
+private val ObjCExportCodeGenerator.kotlinToObjCFunctionAttributedType: Pair<AttributedLlvmType, List<AttributedLlvmType>>
+    get() = AttributedLlvmType(int8TypePtr) to listOf(AttributedLlvmType(codegen.kObjHeaderPtr))
+
 private val ObjCExportCodeGeneratorBase.objCToKotlinFunctionType: LLVMTypeRef
     get() = functionType(codegen.kObjHeaderPtr, false, int8TypePtr, codegen.kObjHeaderPtrPtr)
 
@@ -792,11 +795,12 @@ private fun ObjCExportCodeGenerator.emitSpecialClassesConvertions() {
 
 private fun ObjCExportCodeGenerator.emitCollectionConverters() {
 
-    fun importConverter(name: String): ConstPointer = constPointer(context.llvm.externalFunction(
+    fun importConverter(name: String): ConstPointer = constPointer(context.llvm.externalFunction(LlvmFunction(
             name,
-            kotlinToObjCFunctionType,
-            CurrentKlibModuleOrigin
-    ))
+            kotlinToObjCFunctionAttributedType.first,
+            kotlinToObjCFunctionAttributedType.second,
+            origin = CurrentKlibModuleOrigin
+    )))
 
     setObjCExportTypeInfo(
             symbols.list.owner,

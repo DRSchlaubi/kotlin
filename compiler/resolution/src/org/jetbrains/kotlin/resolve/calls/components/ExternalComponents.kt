@@ -71,6 +71,7 @@ interface KotlinResolutionCallbacks {
         lambdaArgument: LambdaKotlinCallArgument,
         isSuspend: Boolean,
         receiverType: UnwrappedType?,
+        contextReceiversTypes: List<UnwrappedType>,
         parameters: List<UnwrappedType>,
         expectedReturnType: UnwrappedType?, // null means, that return type is not proper i.e. it depends on some type variables
         annotations: Annotations,

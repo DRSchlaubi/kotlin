@@ -641,7 +641,9 @@ internal abstract class FunctionGenerationContext(
     fun call(llvmFunction: LLVMValueRef, args: List<LLVMValueRef>,
              resultLifetime: Lifetime = Lifetime.IRRELEVANT,
              exceptionHandler: ExceptionHandler = ExceptionHandler.None,
-             verbatim: Boolean = false): LLVMValueRef {
+             verbatim: Boolean = false,
+             llvmFunctionProto: LlvmFunction? = null
+    ): LLVMValueRef {
         val callArgs = if (verbatim || !isObjectReturn(llvmFunction.type)) {
             args
         } else {
@@ -668,7 +670,9 @@ internal abstract class FunctionGenerationContext(
             }
             args + resultSlot
         }
-        return callRaw(llvmFunction, callArgs, exceptionHandler)
+        return callRaw(llvmFunction, callArgs, exceptionHandler).also {
+            llvmFunctionProto?.addCallSiteAttributes(it, llvmContext)
+        }
     }
 
     private fun callRaw(llvmFunction: LLVMValueRef, args: List<LLVMValueRef>,

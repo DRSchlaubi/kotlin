@@ -322,7 +322,7 @@ internal class Llvm(val context: Context, val llvmModule: LLVMModuleRef) {
             // As exported functions are written in C++ they assume sign extension for promoted types -
             // mention that in attributes.
             val function = addLlvmFunctionWithDefaultAttributes(context, llvmModule, llvmFunction.name, llvmFunction.llvmFunctionType)
-            llvmFunction.addAttributes(function)
+            llvmFunction.addFunctionAttributes(function, llvmContext)
             return function
         }
     }

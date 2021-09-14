@@ -408,7 +408,7 @@ internal fun addLlvmFunctionEnumAttribute(function: LLVMValueRef, attrKindId: LL
     addLlvmFunctionAttribute(function, attribute)
 }
 
-internal fun createLlvmEnumAttribute(llvmContext: LLVMContextRef, attrKindId: LLVMAttributeKindId, value: Long = 0) =
+internal fun createLlvmEnumAttribute(llvmContext: LLVMContextRef, attrKindId: LLVMAttributeKindId, value: Long = 0): LLVMAttributeRef =
         LLVMCreateEnumAttribute(llvmContext, attrKindId.value, value)!!
 
 internal fun addLlvmFunctionAttribute(function: LLVMValueRef, attribute: LLVMAttributeRef) {

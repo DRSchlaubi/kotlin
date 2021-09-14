@@ -6,7 +6,7 @@
 package org.jetbrains.kotlin.backend.konan.llvm
 
 // TODO: Split into several classes (parameter attribute, function attribute)
-enum class LlvmAttribute(val llvmAttributeName: String) {
+enum class LlvmAttribute(private val llvmAttributeName: String) {
     SignExt("signext"),
     ZeroExt("zeroext"),
     NoUnwind("nounwind"),

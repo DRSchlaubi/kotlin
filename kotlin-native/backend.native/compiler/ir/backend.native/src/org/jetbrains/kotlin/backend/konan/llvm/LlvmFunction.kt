@@ -5,9 +5,7 @@
 
 package org.jetbrains.kotlin.backend.konan.llvm
 
-import llvm.LLVMAddAttributeAtIndex
-import llvm.LLVMGetTypeContext
-import llvm.LLVMValueRef
+import llvm.*
 import org.jetbrains.kotlin.backend.konan.RuntimeNames
 import org.jetbrains.kotlin.backend.konan.ir.llvmSymbolOrigin
 import org.jetbrains.kotlin.descriptors.konan.CompiledKlibModuleOrigin
@@ -28,34 +26,34 @@ class LlvmFunction(
         functionType(returnType.llvmType, isVararg, parameterTypes.map { it.llvmType })
     }
 
-    fun addAttributes(function: LLVMValueRef) {
-        addAttributesToFunction(function)
-        addAttributesToReturnType(function)
+    fun addCallSiteAttributes(callSite: LLVMValueRef, llvmContext: LLVMContextRef) {
+        // TODO: Do we need function attributes here?
+        addCallSiteAttributesAtIndex(llvmContext, callSite, LLVMAttributeReturnIndex, returnType.attributes)
         repeat(parameterTypes.count()) {
-            addAttributesToParameter(function, it)
+            addCallSiteAttributesAtIndex(llvmContext, callSite, it + 1, parameterTypes[it].attributes)
         }
     }
 
-    private fun addAttributesToFunction(function: LLVMValueRef) {
-        functionAttributes.forEach {
-            addLlvmFunctionEnumAttribute(function, it.asAttributeKindId())
+    private fun addCallSiteAttributesAtIndex(context: LLVMContextRef, callSite: LLVMValueRef, index: Int, attributes: List<LlvmAttribute>) {
+        attributes.forEach { attribute ->
+            val llvmAttributeRef = createLlvmEnumAttribute(context, attribute.asAttributeKindId())
+            LLVMAddCallSiteAttribute(callSite, index, llvmAttributeRef)
         }
     }
 
-    private fun addAttributesToReturnType(function: LLVMValueRef) {
-        val llvmAttributes = returnType.attributes.map { it.asAttributeKindId() }
-        addLlvmAttributesToParameter(function, 0, llvmAttributes)
+    fun addFunctionAttributes(function: LLVMValueRef, llvmContext: LLVMContextRef) {
+        addDeclarationAttributesAtIndex(llvmContext, function, LLVMAttributeFunctionIndex, functionAttributes)
+        addDeclarationAttributesAtIndex(llvmContext, function, LLVMAttributeReturnIndex, returnType.attributes)
+        repeat(parameterTypes.count()) {
+            addDeclarationAttributesAtIndex(llvmContext, function, it + 1, parameterTypes[it].attributes)
+        }
     }
 
-    private fun addAttributesToParameter(function: LLVMValueRef, index: Int) {
-        val llvmAttributes = parameterTypes[index].attributes.map { it.asAttributeKindId() }
-        addLlvmAttributesToParameter(function, index + 1, llvmAttributes)
-    }
 
-    private fun addLlvmAttributesToParameter(function: LLVMValueRef, index: Int, llvmAttributes: List<LLVMAttributeKindId>) {
-        llvmAttributes.forEach {
-            val attribute = createLlvmEnumAttribute(LLVMGetTypeContext(function.type)!!, it)
-            LLVMAddAttributeAtIndex(function, index, attribute)
+    private fun addDeclarationAttributesAtIndex(context: LLVMContextRef, function: LLVMValueRef, index: Int, attributes: List<LlvmAttribute>) {
+        attributes.forEach { attribute ->
+            val llvmAttributeRef = createLlvmEnumAttribute(context, attribute.asAttributeKindId())
+            LLVMAddAttributeAtIndex(function, index, llvmAttributeRef)
         }
     }
 }

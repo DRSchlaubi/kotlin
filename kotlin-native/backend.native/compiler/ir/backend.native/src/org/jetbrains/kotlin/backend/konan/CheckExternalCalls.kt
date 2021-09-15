@@ -41,21 +41,21 @@ private class CallsChecker(val context: Context, goodFunctions: List<String>) {
     private fun moduleFunction(name: String) =
             LLVMGetNamedFunction(context.llvmModule, name) ?: throw IllegalStateException("$name function is not available")
 
-    val getMethodImpl = context.llvm.externalFunction(LlvmFunction(
+    val getMethodImpl = context.llvm.externalFunction(LlvmFunctionProto(
         "class_getMethodImplementation",
         AttributedLlvmType(pointerType(functionType(voidType, false))),
         listOf(AttributedLlvmType(int8TypePtr), AttributedLlvmType(int8TypePtr)),
         origin = context.stdlibModule.llvmSymbolOrigin)
     )
 
-    val getClass = context.llvm.externalFunction(LlvmFunction(
+    val getClass = context.llvm.externalFunction(LlvmFunctionProto(
             "object_getClass",
             AttributedLlvmType(int8TypePtr),
             listOf(AttributedLlvmType(int8TypePtr)),
             origin = context.stdlibModule.llvmSymbolOrigin)
     )
 
-    val getSuperClass = context.llvm.externalFunction(LlvmFunction(
+    val getSuperClass = context.llvm.externalFunction(LlvmFunctionProto(
             "class_getSuperclass",
             AttributedLlvmType(int8TypePtr),
             listOf(AttributedLlvmType(int8TypePtr)),

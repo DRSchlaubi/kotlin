@@ -455,13 +455,13 @@ internal class IntrinsicGenerator(private val environment: IntrinsicGeneratorEnv
         val functionParameterTypes = listOf(AttributedLlvmType(int8TypePtr), AttributedLlvmType(int8TypePtr))
 
         val libobjc = context.standardLlvmSymbolsOrigin
-        val normalMessenger = context.llvm.externalFunction(LlvmFunction(
+        val normalMessenger = context.llvm.externalFunction(LlvmFunctionProto(
                 "objc_msgSend$messengerNameSuffix",
                 functionReturnType,
                 functionParameterTypes,
                 origin = libobjc
         ))
-        val superMessenger = context.llvm.externalFunction(LlvmFunction(
+        val superMessenger = context.llvm.externalFunction(LlvmFunctionProto(
                 "objc_msgSendSuper$messengerNameSuffix",
                 functionReturnType,
                 functionParameterTypes,

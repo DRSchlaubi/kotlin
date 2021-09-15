@@ -22,7 +22,7 @@ internal open class ObjCCodeGenerator(val codegen: CodeGenerator) {
     }
 
     private val objcMsgSend = constPointer(
-            context.llvm.externalFunction(LlvmFunction(
+            context.llvm.externalFunction(LlvmFunctionProto(
                     "objc_msgSend",
                     AttributedLlvmType(int8TypePtr),
                     listOf(AttributedLlvmType(int8TypePtr), AttributedLlvmType(int8TypePtr)),
@@ -31,12 +31,15 @@ internal open class ObjCCodeGenerator(val codegen: CodeGenerator) {
             ))
     )
 
-    val objcRelease = context.llvm.externalFunction(LlvmFunction(
-            "objc_release",
-            AttributedLlvmType(voidType),
-            listOf(AttributedLlvmType(int8TypePtr)),
-            origin = context.stdlibModule.llvmSymbolOrigin
-    ))
+    val objcRelease = run {
+        val proto = LlvmFunctionProto(
+                "objc_release",
+                AttributedLlvmType(voidType),
+                listOf(AttributedLlvmType(int8TypePtr)),
+                origin = context.stdlibModule.llvmSymbolOrigin
+        )
+        FunctionLlvmDeclarations(context.llvm.externalFunction(proto), proto)
+    }
 
     val objcAlloc = context.llvm.externalFunction(
             "objc_alloc",
@@ -61,8 +64,11 @@ internal open class ObjCCodeGenerator(val codegen: CodeGenerator) {
     }
 
     // TODO: this doesn't support stret.
-    fun msgSender(functionType: LLVMTypeRef): LLVMValueRef =
-            objcMsgSend.bitcast(pointerType(functionType)).llvm
+    fun msgSender(functionType: LLVMTypeRef): FunctionLlvmDeclarations =
+            FunctionLlvmDeclarations(
+                    objcMsgSend.bitcast(pointerType(functionType)).llvm,
+                    LlvmCallSiteAttributeProvider.makeEmpty(functionType)
+            )
 }
 
 internal fun FunctionGenerationContext.genObjCSelector(selector: String): LLVMValueRef {

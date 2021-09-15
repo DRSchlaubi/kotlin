@@ -49,8 +49,17 @@ internal fun IrClass.hasConstStateAndNoSideEffects(context: Context): Boolean {
 
 internal class CodeGenerator(override val context: Context) : ContextUtils {
 
-    fun llvmFunction(function: IrFunction): LLVMValueRef = llvmFunctionOrNull(function) ?: error("no function ${function.name} in ${function.file.fqName}")
-    fun llvmFunctionOrNull(function: IrFunction): LLVMValueRef? = function.llvmFunctionOrNull
+    fun llvmFunction(function: IrFunction): LLVMValueRef =
+            functionDeclarationsOrNull(function)?.llvmFunction
+                    ?: error("no function ${function.name} in ${function.file.fqName}")
+
+    fun functionDeclarations(function: IrFunction): FunctionLlvmDeclarations =
+            functionDeclarationsOrNull(function)
+                    ?: error("no function ${function.name} in ${function.file.fqName}")
+
+    fun functionDeclarationsOrNull(function: IrFunction): FunctionLlvmDeclarations? =
+            function.llvmDeclarationsOrNull
+
     val intPtrType = LLVMIntPtrTypeInContext(llvmContext, llvmTargetData)!!
     internal val immOneIntPtrType = LLVMConstInt(intPtrType, 1, 1)!!
     internal val immThreeIntPtrType = LLVMConstInt(intPtrType, 3, 1)!!
@@ -638,11 +647,17 @@ internal abstract class FunctionGenerationContext(
                             Int32(size).llvm,
                             Int1(isVolatile).llvm))
 
+    fun call(llvmDeclarations: FunctionLlvmDeclarations, args: List<LLVMValueRef>,
+             resultLifetime: Lifetime = Lifetime.IRRELEVANT,
+             exceptionHandler: ExceptionHandler = ExceptionHandler.None,
+             verbatim: Boolean = false): LLVMValueRef =
+            call(llvmDeclarations.llvmFunction, args, resultLifetime, exceptionHandler, verbatim, llvmDeclarations.prototype)
+
     fun call(llvmFunction: LLVMValueRef, args: List<LLVMValueRef>,
              resultLifetime: Lifetime = Lifetime.IRRELEVANT,
              exceptionHandler: ExceptionHandler = ExceptionHandler.None,
              verbatim: Boolean = false,
-             llvmFunctionProto: LlvmFunction? = null
+             attributeProvider: LlvmCallSiteAttributeProvider? = null
     ): LLVMValueRef {
         val callArgs = if (verbatim || !isObjectReturn(llvmFunction.type)) {
             args
@@ -671,7 +686,7 @@ internal abstract class FunctionGenerationContext(
             args + resultSlot
         }
         return callRaw(llvmFunction, callArgs, exceptionHandler).also {
-            llvmFunctionProto?.addCallSiteAttributes(it, llvmContext)
+            attributeProvider?.addCallSiteAttributes(it)
         }
     }
 
@@ -1316,7 +1331,7 @@ internal abstract class FunctionGenerationContext(
                 val name = irClass.descriptor.getExternalObjCMetaClassBinaryName()
                 val objCClass = getObjCClass(name, llvmSymbolOrigin)
 
-                val getClass = context.llvm.externalFunction(LlvmFunction(
+                val getClass = context.llvm.externalFunction(LlvmFunctionProto(
                         "object_getClass",
                         AttributedLlvmType(int8TypePtr),
                         listOf(AttributedLlvmType(int8TypePtr)),
@@ -1526,7 +1541,7 @@ internal abstract class FunctionGenerationContext(
         handleEpilogueForExperimentalMM(context.llvm.Kotlin_mm_safePointFunctionEpilogue)
     }
 
-    private fun handleEpilogueForExperimentalMM(safePointFunction: LLVMValueRef) {
+    private fun handleEpilogueForExperimentalMM(safePointFunction: FunctionLlvmDeclarations) {
         if (context.memoryModel == MemoryModel.EXPERIMENTAL) {
             if (!forbidRuntime) {
                 call(safePointFunction, emptyList())

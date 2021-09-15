@@ -5,9 +5,6 @@
 
 package org.jetbrains.kotlin.backend.konan.llvm
 
-import kotlinx.cinterop.allocArray
-import kotlinx.cinterop.get
-import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.toKString
 import llvm.*
 import org.jetbrains.kotlin.backend.konan.CachedLibraries
@@ -171,16 +168,25 @@ internal interface ContextUtils : RuntimeAware {
      * It may be declared as external function prototype.
      */
     val IrFunction.llvmFunction: LLVMValueRef
-        get() = llvmFunctionOrNull
+        get() = llvmDeclarationsOrNull?.llvmFunction
                 ?: error("$name in ${file.name}/${parent.fqNameForIrSerialization}")
 
-    val IrFunction.llvmFunctionOrNull: LLVMValueRef?
+    val IrFunction.llvmDeclarations: FunctionLlvmDeclarations
+        get() = llvmDeclarationsOrNull
+                ?: error("$name in ${file.name}/${parent.fqNameForIrSerialization}")
+
+    val IrFunction.llvmDeclarationsOrNull: FunctionLlvmDeclarations?
         get() {
-            assert(this.isReal)
+            assert(this.isReal) {
+                this.computeFullName()
+            }
             return if (isExternal(this)) {
-                runtime.addedLLVMExternalFunctions.getOrPut(this) { context.llvm.externalFunction(LlvmFunction(this)) }
+                runtime.addedLLVMExternalFunctions.getOrPut(this) {
+                    val proto = LlvmFunctionProto(this, this.computeSymbolName())
+                    FunctionLlvmDeclarations(context.llvm.externalFunction(proto), proto)
+                }
             } else {
-                context.llvmDeclarations.forFunctionOrNull(this)?.llvmFunction
+                context.llvmDeclarations.forFunctionOrNull(this)
             }
         }
 
@@ -254,19 +260,21 @@ internal class InitializersGenerationState {
 
 internal class Llvm(val context: Context, val llvmModule: LLVMModuleRef) {
 
-    private fun importFunction(name: String, otherModule: LLVMModuleRef): LLVMValueRef {
+    private fun importFunction(name: String, otherModule: LLVMModuleRef): FunctionLlvmDeclarations {
         if (LLVMGetNamedFunction(llvmModule, name) != null) {
             throw IllegalArgumentException("function $name already exists")
         }
 
         val externalFunction = LLVMGetNamedFunction(otherModule, name) ?: throw Error("function $name not found")
 
+        val attributesCopier = LlvmFunctionAttributesCopier(externalFunction)
+
         val functionType = getFunctionType(externalFunction)
         val function = LLVMAddFunction(llvmModule, name, functionType)!!
 
-        copyFunctionAttributes(externalFunction, function)
+        attributesCopier.addFunctionAttributes(function)
 
-        return function
+        return FunctionLlvmDeclarations(function, attributesCopier)
     }
 
     private fun importGlobal(name: String, otherModule: LLVMModuleRef): LLVMValueRef {
@@ -279,19 +287,6 @@ internal class Llvm(val context: Context, val llvmModule: LLVMModuleRef) {
         val global = LLVMAddGlobal(llvmModule, globalType, name)!!
 
         return global
-    }
-
-    private fun copyFunctionAttributes(source: LLVMValueRef, destination: LLVMValueRef) {
-        // TODO: consider parameter attributes
-        val attributeIndex = LLVMAttributeFunctionIndex
-        val count = LLVMGetAttributeCountAtIndex(source, attributeIndex)
-        memScoped {
-            val attributes = allocArray<LLVMAttributeRefVar>(count)
-            LLVMGetAttributesAtIndex(source, attributeIndex, attributes)
-            (0 until count).forEach {
-                LLVMAddAttributeAtIndex(destination, attributeIndex, attributes[it])
-            }
-        }
     }
 
     private fun importMemset(): LLVMValueRef {
@@ -308,12 +303,12 @@ internal class Llvm(val context: Context, val llvmModule: LLVMModuleRef) {
         return result
     }
 
-    internal fun externalFunction(llvmFunction: LlvmFunction): LLVMValueRef {
-        this.imports.add(llvmFunction.origin, onlyBitcode = llvmFunction.independent)
-        val found = LLVMGetNamedFunction(llvmModule, llvmFunction.name)
+    internal fun externalFunction(llvmFunctionProto: LlvmFunctionProto): LLVMValueRef {
+        this.imports.add(llvmFunctionProto.origin, onlyBitcode = llvmFunctionProto.independent)
+        val found = LLVMGetNamedFunction(llvmModule, llvmFunctionProto.name)
         if (found != null) {
-            assert(getFunctionType(found) == llvmFunction.llvmFunctionType) {
-                "Expected: ${LLVMPrintTypeToString(llvmFunction.llvmFunctionType)!!.toKString()} " +
+            assert(getFunctionType(found) == llvmFunctionProto.llvmFunctionType) {
+                "Expected: ${LLVMPrintTypeToString(llvmFunctionProto.llvmFunctionType)!!.toKString()} " +
                         "found: ${LLVMPrintTypeToString(getFunctionType(found))!!.toKString()}"
             }
             assert(LLVMGetLinkage(found) == LLVMLinkage.LLVMExternalLinkage)
@@ -321,8 +316,8 @@ internal class Llvm(val context: Context, val llvmModule: LLVMModuleRef) {
         } else {
             // As exported functions are written in C++ they assume sign extension for promoted types -
             // mention that in attributes.
-            val function = addLlvmFunctionWithDefaultAttributes(context, llvmModule, llvmFunction.name, llvmFunction.llvmFunctionType)
-            llvmFunction.addFunctionAttributes(function, llvmContext)
+            val function = addLlvmFunctionWithDefaultAttributes(context, llvmModule, llvmFunctionProto.name, llvmFunctionProto.llvmFunctionType)
+            llvmFunctionProto.addFunctionAttributes(function)
             return function
         }
     }
@@ -538,14 +533,14 @@ internal class Llvm(val context: Context, val llvmModule: LLVMModuleRef) {
         else -> "__gxx_personality_v0"
     }
 
-    val cxxStdTerminate = externalFunction(LlvmFunction(
+    val cxxStdTerminate = externalFunction(LlvmFunctionProto(
             "_ZSt9terminatev", // mangled C++ 'std::terminate'
             returnType = AttributedLlvmType(voidType),
             functionAttributes = listOf(LlvmAttribute.NoUnwind),
             origin = context.standardLlvmSymbolsOrigin
     ))
 
-    val gxxPersonalityFunction = externalFunction(LlvmFunction(
+    val gxxPersonalityFunction = externalFunction(LlvmFunctionProto(
             personalityFunctionName,
             returnType = AttributedLlvmType(int32Type),
             functionAttributes = listOf(LlvmAttribute.NoUnwind),
@@ -553,7 +548,7 @@ internal class Llvm(val context: Context, val llvmModule: LLVMModuleRef) {
             origin = context.standardLlvmSymbolsOrigin
     ))
 
-    val cxaBeginCatchFunction = externalFunction(LlvmFunction(
+    val cxaBeginCatchFunction = externalFunction(LlvmFunctionProto(
             "__cxa_begin_catch",
             returnType = AttributedLlvmType(int8TypePtr),
             functionAttributes = listOf(LlvmAttribute.NoUnwind),
@@ -561,7 +556,7 @@ internal class Llvm(val context: Context, val llvmModule: LLVMModuleRef) {
             origin = context.standardLlvmSymbolsOrigin
     ))
 
-    val cxaEndCatchFunction = externalFunction(LlvmFunction(
+    val cxaEndCatchFunction = externalFunction(LlvmFunctionProto(
             "__cxa_end_catch",
             returnType = AttributedLlvmType(voidType),
             functionAttributes = listOf(LlvmAttribute.NoUnwind),
@@ -595,11 +590,11 @@ internal class Llvm(val context: Context, val llvmModule: LLVMModuleRef) {
     private object lazyRtFunction {
         operator fun provideDelegate(
                 thisRef: Llvm, property: KProperty<*>
-        ) = object : ReadOnlyProperty<Llvm, LLVMValueRef> {
+        ) = object : ReadOnlyProperty<Llvm, FunctionLlvmDeclarations> {
 
-            val value by lazy { thisRef.importRtFunction(property.name) }
+            val value: FunctionLlvmDeclarations by lazy { thisRef.importRtFunction(property.name) }
 
-            override fun getValue(thisRef: Llvm, property: KProperty<*>): LLVMValueRef = value
+            override fun getValue(thisRef: Llvm, property: KProperty<*>): FunctionLlvmDeclarations = value
         }
     }
 
@@ -621,14 +616,14 @@ internal class Llvm(val context: Context, val llvmModule: LLVMModuleRef) {
      * Width of NSInteger in bits.
      */
     val nsIntegerTypeWidth: Long by lazy {
-        getSizeOfReturnTypeInBits(Kotlin_ObjCExport_NSIntegerTypeProvider)
+        getSizeOfReturnTypeInBits(Kotlin_ObjCExport_NSIntegerTypeProvider.llvmFunction)
     }
 
     /**
      * Width of C long type in bits.
      */
     val longTypeWidth: Long by lazy {
-        getSizeOfReturnTypeInBits(Kotlin_longTypeProvider)
+        getSizeOfReturnTypeInBits(Kotlin_longTypeProvider.llvmFunction)
     }
 }
 

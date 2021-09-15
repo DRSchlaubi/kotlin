@@ -34,8 +34,13 @@ enum class UniqueKind(val llvmName: String) {
 }
 
 internal class LlvmDeclarations(private val unique: Map<UniqueKind, UniqueLlvmDeclarations>) {
-    fun forFunction(function: IrFunction) = forFunctionOrNull(function) ?: with(function){error("$name in $file/${parent.fqNameForIrSerialization}")}
-    fun forFunctionOrNull(function: IrFunction) = (function.metadata as? CodegenFunctionMetadata)?.llvm
+    fun forFunction(function: IrFunction): FunctionLlvmDeclarations =
+            forFunctionOrNull(function) ?: with(function) {
+                error("$name in $file/${parent.fqNameForIrSerialization}")
+            }
+
+    fun forFunctionOrNull(function: IrFunction): FunctionLlvmDeclarations? =
+            (function.metadata as? CodegenFunctionMetadata)?.llvm
 
     fun forClass(irClass: IrClass) = (irClass.metadata as? CodegenClassMetadata)?.llvm ?:
             error(irClass.descriptor.toString())
@@ -68,7 +73,7 @@ internal class KotlinObjCClassLlvmDeclarations(
         val bodyOffsetGlobal: StaticData.Global
 )
 
-internal class FunctionLlvmDeclarations(val llvmFunction: LLVMValueRef)
+class FunctionLlvmDeclarations(val llvmFunction: LLVMValueRef, val prototype: LlvmCallSiteAttributeProvider)
 
 internal class FieldLlvmDeclarations(val index: Int, val classBodyType: LLVMTypeRef)
 
@@ -341,14 +346,15 @@ private class DeclarationsGeneratorVisitor(override val context: Context) :
             return
         }
 
-        val llvmFunction = if (declaration.isExternal) {
+        val (llvmFunction, llvmFunctionProto) = if (declaration.isExternal) {
             if (declaration.isTypedIntrinsic || declaration.isObjCBridgeBased()
                     // All call-sites to external accessors to interop properties
                     // are lowered by InteropLowering.
                     || (declaration.isAccessor && declaration.isFromInteropLibrary())
                     || declaration.annotations.hasAnnotation(RuntimeNames.cCall)) return
 
-            context.llvm.externalFunction(LlvmFunction(declaration))
+            val proto = LlvmFunctionProto(declaration, declaration.computeSymbolName())
+            context.llvm.externalFunction(proto) to proto
         } else {
             val symbolName = if (declaration.isExported()) {
                 declaration.computeSymbolName().also {
@@ -362,21 +368,22 @@ private class DeclarationsGeneratorVisitor(override val context: Context) :
             } else {
                 "kfun:" + qualifyInternalName(declaration)
             }
-
-            addLlvmFunctionWithDefaultAttributes(
+            val proto = LlvmFunctionProto(declaration, symbolName)
+            val llvmFunction = addLlvmFunctionWithDefaultAttributes(
                     context,
                     context.llvmModule!!,
                     symbolName,
-                    getLlvmFunctionType(declaration)
+                    proto.llvmFunctionType
             ).also {
                 addLlvmAttributesForKotlinFunction(context, declaration, it)
             }
+            llvmFunction to proto
         }
 
         declaration.metadata = CodegenFunctionMetadata(
                 declaration.metadata?.name,
                 declaration.konanLibrary,
-                FunctionLlvmDeclarations(llvmFunction)
+                FunctionLlvmDeclarations(llvmFunction, llvmFunctionProto)
         )
     }
 }

@@ -115,7 +115,7 @@ internal open class ObjCExportCodeGeneratorBase(codegen: CodeGenerator) : ObjCCo
     val rttiGenerator = RTTIGenerator(context)
 
     private val objcTerminate: LLVMValueRef by lazy {
-        context.llvm.externalFunction(LlvmFunction(
+        context.llvm.externalFunction(LlvmFunctionProto(
                 "objc_terminate",
                 AttributedLlvmType(voidType),
                 functionAttributes = listOf(LlvmAttribute.NoUnwind),
@@ -127,15 +127,30 @@ internal open class ObjCExportCodeGeneratorBase(codegen: CodeGenerator) : ObjCCo
         rttiGenerator.dispose()
     }
 
+    // TODO: Can we get rid of this easily?
+    fun FunctionGenerationContext.callFromBridge(
+            llvmFunction: LLVMValueRef,
+            args: List<LLVMValueRef>,
+            resultLifetime: Lifetime = Lifetime.IRRELEVANT,
+            toNative: Boolean = false,
+    ): LLVMValueRef {
+        val llvmDeclarations = FunctionLlvmDeclarations(
+                llvmFunction,
+                // TODO: Is it correct?
+                LlvmCallSiteAttributeProvider.makeEmpty(llvmFunction.type)
+        )
+        return callFromBridge(llvmDeclarations, args, resultLifetime, toNative)
+    }
+
     // TODO: currently bridges don't have any custom `landingpad`s,
     // so it is correct to use [callAtFunctionScope] here.
     // However, exception handling probably should be refactored
     // (e.g. moved from `IrToBitcode.kt` to [FunctionGenerationContext]).
     fun FunctionGenerationContext.callFromBridge(
-            function: LLVMValueRef,
+            function: FunctionLlvmDeclarations,
             args: List<LLVMValueRef>,
             resultLifetime: Lifetime = Lifetime.IRRELEVANT,
-            toNative: Boolean = false
+            toNative: Boolean = false,
     ): LLVMValueRef {
 
         // TODO: it is required only for Kotlin-to-Objective-C bridges.
@@ -795,7 +810,7 @@ private fun ObjCExportCodeGenerator.emitSpecialClassesConvertions() {
 
 private fun ObjCExportCodeGenerator.emitCollectionConverters() {
 
-    fun importConverter(name: String): ConstPointer = constPointer(context.llvm.externalFunction(LlvmFunction(
+    fun importConverter(name: String): ConstPointer = constPointer(context.llvm.externalFunction(LlvmFunctionProto(
             name,
             kotlinToObjCFunctionAttributedType.first,
             kotlinToObjCFunctionAttributedType.second,
@@ -880,13 +895,15 @@ private fun ObjCExportCodeGenerator.generateObjCImp(
             isDirect = !isVirtual,
             baseMethod = baseMethod
     ) { args, resultLifetime, exceptionHandler ->
-        val llvmTarget = if (!isVirtual) {
-            codegen.llvmFunction(target)
+        val llvmDeclarations = if (!isVirtual) {
+            codegen.functionDeclarations(target)
         } else {
-            lookupVirtualImpl(args.first(), target)
+            FunctionLlvmDeclarations(
+                    lookupVirtualImpl(args.first(), target),
+                    VirtualFunctionProto(target)
+            )
         }
-
-        call(llvmTarget, args, resultLifetime, exceptionHandler)
+        call(llvmDeclarations, args, resultLifetime, exceptionHandler)
     }
 }
 
@@ -975,7 +992,7 @@ private fun ObjCExportCodeGenerator.generateObjCImp(
         continuation != null -> kotlinExceptionHandler { exception ->
             // Callee haven't suspended, so it isn't going to call the completion. Call it here:
             callFromBridge(
-                    context.ir.symbols.objCExportResumeContinuationWithException.owner.llvmFunction,
+                    context.ir.symbols.objCExportResumeContinuationWithException.owner.llvmDeclarations,
                     listOf(continuation!!, exception)
             )
             // Note: completion block could be called directly instead, but this implementation is
@@ -984,7 +1001,7 @@ private fun ObjCExportCodeGenerator.generateObjCImp(
         }
 
         else -> kotlinExceptionHandler { exception ->
-            callFromBridge(symbols.objCExportTrapOnUndeclaredException.owner.llvmFunction, listOf(exception))
+            callFromBridge(symbols.objCExportTrapOnUndeclaredException.owner.llvmDeclarations, listOf(exception))
             unreachable()
         }
     }
@@ -1013,14 +1030,14 @@ private fun ObjCExportCodeGenerator.generateObjCImp(
             MethodBridge.ReturnValue.Instance.FactoryResult -> return autoreleaseAndRet(kotlinReferenceToRetainedObjC(targetResult!!)) // provided by [callKotlin]
             MethodBridge.ReturnValue.Suspend -> {
                 val coroutineSuspended = callFromBridge(
-                        codegen.llvmFunction(context.ir.symbols.objCExportGetCoroutineSuspended.owner),
+                        codegen.functionDeclarations(context.ir.symbols.objCExportGetCoroutineSuspended.owner),
                         emptyList(),
                         Lifetime.STACK
                 )
                 ifThen(icmpNe(targetResult!!, coroutineSuspended)) {
                     // Callee haven't suspended, so it isn't going to call the completion. Call it here:
                     callFromBridge(
-                            context.ir.symbols.objCExportResumeContinuation.owner.llvmFunction,
+                            context.ir.symbols.objCExportResumeContinuation.owner.llvmDeclarations,
                             listOf(continuation!!, targetResult)
                     )
                     // Note: completion block could be called directly instead, but this implementation is
@@ -1146,7 +1163,7 @@ private fun ObjCExportCodeGenerator.generateKotlinToObjCBridge(
                     val continuation = param(irFunction.allParametersCount) // The last argument.
                     // TODO: consider placing interception into the converter to reduce code size.
                     val intercepted = callFromBridge(
-                            context.ir.symbols.objCExportInterceptedContinuation.owner.llvmFunction,
+                            context.ir.symbols.objCExportInterceptedContinuation.owner.llvmDeclarations,
                             listOf(continuation),
                             Lifetime.ARGUMENT
                     )

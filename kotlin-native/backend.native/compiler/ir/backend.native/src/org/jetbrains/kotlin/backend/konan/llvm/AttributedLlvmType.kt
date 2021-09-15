@@ -7,9 +7,8 @@ package org.jetbrains.kotlin.backend.konan.llvm
 
 import llvm.LLVMTypeRef
 import org.jetbrains.kotlin.backend.common.ir.allParameters
-import org.jetbrains.kotlin.backend.konan.BinaryType
-import org.jetbrains.kotlin.backend.konan.PrimitiveBinaryType
-import org.jetbrains.kotlin.backend.konan.computeBinaryType
+import org.jetbrains.kotlin.backend.konan.*
+import org.jetbrains.kotlin.backend.konan.unwrapToPrimitiveOrReference
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
 import org.jetbrains.kotlin.ir.declarations.IrFunction
 import org.jetbrains.kotlin.ir.types.IrType
@@ -41,17 +40,24 @@ internal fun RuntimeAware.getLlvmFunctionReturnType(function: IrFunction): Attri
 }
 
 private fun defaultAttributesForIrType(irType: IrType): List<LlvmAttribute> {
-    val binaryType = irType.computeBinaryType()
-    if (binaryType is BinaryType.Primitive) {
-        if (binaryType.type == PrimitiveBinaryType.BOOLEAN ||
-                binaryType.type == PrimitiveBinaryType.BYTE ||
-                binaryType.type == PrimitiveBinaryType.SHORT
-        ) {
-            return if (irType.isChar())
-                listOf(LlvmAttribute.ZeroExt)
-            else
-                listOf(LlvmAttribute.SignExt)
-        }
-    }
-    return emptyList()
+    return irType.unwrapToPrimitiveOrReference(
+            eachInlinedClass = { _, _ -> },
+            ifPrimitive = { primitiveType, _ ->
+                when (primitiveType) {
+                    KonanPrimitiveType.BOOLEAN -> listOf(LlvmAttribute.ZeroExt)
+                    KonanPrimitiveType.CHAR -> listOf(LlvmAttribute.ZeroExt)
+                    KonanPrimitiveType.BYTE -> listOf(LlvmAttribute.SignExt)
+                    KonanPrimitiveType.SHORT -> listOf(LlvmAttribute.SignExt)
+                    KonanPrimitiveType.INT -> emptyList()
+                    KonanPrimitiveType.LONG -> emptyList()
+                    KonanPrimitiveType.FLOAT -> emptyList()
+                    KonanPrimitiveType.DOUBLE -> emptyList()
+                    KonanPrimitiveType.NON_NULL_NATIVE_PTR -> emptyList()
+                    KonanPrimitiveType.VECTOR128 -> emptyList()
+                }
+            },
+            ifReference = {
+                return listOf()
+            },
+    )
 }

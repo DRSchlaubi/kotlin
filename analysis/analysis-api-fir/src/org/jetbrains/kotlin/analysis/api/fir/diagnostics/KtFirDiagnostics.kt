@@ -2277,6 +2277,11 @@ sealed class KtFirDiagnostic<PSI : PsiElement> : KtDiagnosticWithPsi<PSI> {
         abstract val property: KtVariableSymbol
     }
 
+    abstract class DslScopeViolation : KtFirDiagnostic<PsiElement>() {
+        override val diagnosticClass get() = DslScopeViolation::class
+        abstract val calleeSymbol: KtSymbol
+    }
+
     abstract class ToplevelTypealiasesOnly : KtFirDiagnostic<KtTypeAlias>() {
         override val diagnosticClass get() = ToplevelTypealiasesOnly::class
     }

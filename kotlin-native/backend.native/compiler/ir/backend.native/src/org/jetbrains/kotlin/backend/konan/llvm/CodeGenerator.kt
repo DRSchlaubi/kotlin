@@ -1206,7 +1206,7 @@ internal abstract class FunctionGenerationContext(
             if (parent.isObjCClass()) {
                 // TODO: cache it too.
                 return call(
-                        codegen.llvmFunction(context.ir.symbols.interopInterpretObjCPointer.owner),
+                        codegen.functionDeclarations(context.ir.symbols.interopInterpretObjCPointer.owner),
                         listOf(getObjCClass(parent, exceptionHandler)),
                         Lifetime.GLOBAL,
                         exceptionHandler

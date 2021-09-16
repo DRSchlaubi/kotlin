@@ -1102,7 +1102,7 @@ private fun ObjCExportCodeGenerator.generateObjCImpForArrayConstructor(
             resultLifetime = Lifetime.ARGUMENT
     )
 
-    call(target.llvmFunction, listOf(arrayInstance) + args, resultLifetime, exceptionHandler)
+    call(target.llvmDeclarations, listOf(arrayInstance) + args, resultLifetime, exceptionHandler)
     arrayInstance
 }
 

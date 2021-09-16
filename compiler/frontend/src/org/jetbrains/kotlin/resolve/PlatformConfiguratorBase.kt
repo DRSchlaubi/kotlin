@@ -46,6 +46,7 @@ private val DEFAULT_DECLARATION_CHECKERS = listOf(
     SealedInheritorInSameModuleChecker,
     SealedInterfaceAllowedChecker,
     SuspendFunctionAsSupertypeChecker,
+    ContextualDeclarationChecker,
 )
 
 private val DEFAULT_CALL_CHECKERS = listOf(

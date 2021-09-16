@@ -247,6 +247,7 @@ enum class LanguageFeature(
     InlineClasses(KOTLIN_1_3, defaultState = State.ENABLED_WITH_WARNING, kind = UNSTABLE_FEATURE),
     ProhibitComparisonOfIncompatibleClasses(sinceVersion = null, kind = BUG_FIX, defaultState = State.DISABLED),
     ExplicitBackingFields(sinceVersion = null, defaultState = State.DISABLED, kind = UNSTABLE_FEATURE),
+    ContextReceivers(KOTLIN_1_7, defaultState = State.ENABLED_WITH_WARNING)
 
     ;
 

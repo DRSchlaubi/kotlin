@@ -41,27 +41,25 @@ internal open class ObjCCodeGenerator(val codegen: CodeGenerator) {
         FunctionLlvmDeclarations(context.llvm.externalFunction(proto), proto)
     }
 
-    val objcAlloc = context.llvm.externalFunction(
+    val objcAlloc = context.llvm.externalFunction(LlvmFunctionProto(
             "objc_alloc",
-            functionType(int8TypePtr, false, int8TypePtr),
-            context.stdlibModule.llvmSymbolOrigin
-    )
+            AttributedLlvmType(int8TypePtr), listOf(AttributedLlvmType(int8TypePtr)),
+            origin = context.stdlibModule.llvmSymbolOrigin
+    ))
 
-    val objcAutorelease = context.llvm.externalFunction(
+    val objcAutorelease = context.llvm.externalFunction(LlvmFunctionProto(
             "llvm.objc.autorelease",
-            functionType(int8TypePtr, false, int8TypePtr),
-            context.stdlibModule.llvmSymbolOrigin
-    ).also {
-        setFunctionNoUnwind(it)
-    }
+            AttributedLlvmType(int8TypePtr), listOf(AttributedLlvmType(int8TypePtr)),
+            listOf(LlvmAttribute.NoUnwind),
+            origin = context.stdlibModule.llvmSymbolOrigin
+    ))
 
-    val objcAutoreleaseReturnValue = context.llvm.externalFunction(
+    val objcAutoreleaseReturnValue = context.llvm.externalFunction(LlvmFunctionProto(
             "llvm.objc.autoreleaseReturnValue",
-            functionType(int8TypePtr, false, int8TypePtr),
-            context.stdlibModule.llvmSymbolOrigin
-    ).also {
-        setFunctionNoUnwind(it)
-    }
+            AttributedLlvmType(int8TypePtr), listOf(AttributedLlvmType(int8TypePtr)),
+            listOf(LlvmAttribute.NoUnwind),
+            origin = context.stdlibModule.llvmSymbolOrigin
+    ))
 
     // TODO: this doesn't support stret.
     fun msgSender(functionType: LLVMTypeRef): FunctionLlvmDeclarations =

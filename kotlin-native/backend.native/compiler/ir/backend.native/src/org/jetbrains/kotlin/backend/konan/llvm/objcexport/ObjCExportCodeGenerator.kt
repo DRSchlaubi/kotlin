@@ -800,7 +800,7 @@ private fun ObjCExportBlockCodeGenerator.emitBlockToKotlinFunctionConverters() {
 private fun ObjCExportCodeGenerator.emitSpecialClassesConvertions() {
     setObjCExportTypeInfo(
             symbols.string.owner,
-            constPointer(context.llvm.Kotlin_ObjCExport_CreateRetainedNSStringFromKString)
+            constPointer(context.llvm.Kotlin_ObjCExport_CreateRetainedNSStringFromKString.llvmFunction)
     )
 
     emitCollectionConverters()

@@ -5,11 +5,11 @@
 
 package org.jetbrains.kotlin.fir.analysis.checkers.declaration
 
+import org.jetbrains.kotlin.KtFakeSourceElementKind
 import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.descriptors.annotations.KotlinTarget
 import org.jetbrains.kotlin.fir.FirAnnotationContainer
-import org.jetbrains.kotlin.fir.FirFakeSourceElementKind
 import org.jetbrains.kotlin.fir.analysis.checkers.*
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.context.findClosest
@@ -154,7 +154,7 @@ object FirAnnotationChecker : FirAnnotatedDeclarationChecker() {
                         reporter.reportOn(annotation.source, FirErrors.INAPPLICABLE_PARAM_TARGET, context)
                     }
                 }
-                annotated is FirProperty && annotated.source?.kind == FirFakeSourceElementKind.PropertyFromParameter -> {
+                annotated is FirProperty && annotated.source?.kind == KtFakeSourceElementKind.PropertyFromParameter -> {
                 }
                 else -> reporter.reportOn(annotation.source, FirErrors.INAPPLICABLE_PARAM_TARGET, context)
             }
@@ -248,7 +248,7 @@ object FirAnnotationChecker : FirAnnotatedDeclarationChecker() {
 
             if (annotation.annotationTypeRef.coneType in existingAnnotations && !annotation.isRepeatable(context.session)) {
                 val factory = if (isError) FirErrors.REPEATED_ANNOTATION else FirErrors.REPEATED_ANNOTATION_WARNING
-                if (annotation.source?.kind !is FirFakeSourceElementKind) {
+                if (annotation.source?.kind !is KtFakeSourceElementKind) {
                     reporter.reportOn(annotation.source, factory, context)
                 }
             }

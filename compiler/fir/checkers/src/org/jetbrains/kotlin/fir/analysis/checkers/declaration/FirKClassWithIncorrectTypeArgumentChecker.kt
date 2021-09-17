@@ -5,7 +5,7 @@
 
 package org.jetbrains.kotlin.fir.analysis.checkers.declaration
 
-import org.jetbrains.kotlin.fir.FirFakeSourceElementKind
+import org.jetbrains.kotlin.KtFakeSourceElementKind
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors
@@ -38,7 +38,7 @@ object FirKClassWithIncorrectTypeArgumentChecker : FirFileChecker() {
         reporter: DiagnosticReporter
     ) {
         val source = declaration.source ?: return
-        if (source.kind is FirFakeSourceElementKind) return
+        if (source.kind is KtFakeSourceElementKind) return
 
         val returnType = declaration.returnTypeRef.coneType
         if (!returnType.isKClassTypeWithErrorOrNullableArgument(context.session.inferenceComponents.ctx)) return

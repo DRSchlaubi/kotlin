@@ -5,8 +5,8 @@
 
 package org.jetbrains.kotlin.fir.resolve.providers.impl
 
+import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.fir.FirSession
-import org.jetbrains.kotlin.fir.FirSourceElement
 import org.jetbrains.kotlin.fir.ThreadSafeMutableState
 import org.jetbrains.kotlin.fir.declarations.FirEnumEntry
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
@@ -304,7 +304,7 @@ class FirTypeResolverImpl(private val session: FirSession) : FirTypeResolver() {
         return null
     }
 
-    private fun getTypeArgumentsOrNameSource(typeRef: FirUserTypeRef, qualifierIndex: Int?): FirSourceElement? {
+    private fun getTypeArgumentsOrNameSource(typeRef: FirUserTypeRef, qualifierIndex: Int?): KtSourceElement? {
         val qualifierPart = if (qualifierIndex != null) typeRef.qualifier.elementAtOrNull(qualifierIndex) else null
         val typeArgumentsList = qualifierPart?.typeArgumentList
         return if (typeArgumentsList == null || typeArgumentsList.typeArguments.isEmpty()) {

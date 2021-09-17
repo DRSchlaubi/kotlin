@@ -5,12 +5,11 @@
 
 package org.jetbrains.kotlin.fir.analysis.checkers
 
-import org.jetbrains.kotlin.builtins.StandardNames
+import org.jetbrains.kotlin.KtFakeSourceElementKind
 import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.descriptors.annotations.KotlinTarget
 import org.jetbrains.kotlin.fir.FirAnnotationContainer
-import org.jetbrains.kotlin.fir.FirFakeSourceElementKind
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.context.findClosest
@@ -113,7 +112,7 @@ fun checkRepeatedAnnotation(
 ) {
     val duplicated = useSiteTarget in existingTargetsForAnnotation
             || existingTargetsForAnnotation.any { (it == null) != (useSiteTarget == null) }
-    if (duplicated && !annotation.isRepeatable(context.session) && annotation.source?.kind !is FirFakeSourceElementKind) {
+    if (duplicated && !annotation.isRepeatable(context.session) && annotation.source?.kind !is KtFakeSourceElementKind) {
         reporter.reportOn(annotation.source, FirErrors.REPEATED_ANNOTATION, context)
     }
 }

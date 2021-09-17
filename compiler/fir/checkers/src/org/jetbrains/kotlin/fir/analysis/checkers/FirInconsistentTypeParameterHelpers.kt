@@ -5,13 +5,12 @@
 
 package org.jetbrains.kotlin.fir.analysis.checkers
 
-import org.jetbrains.kotlin.fir.FirSourceElement
+import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors
 import org.jetbrains.kotlin.fir.analysis.diagnostics.reportOn
 import org.jetbrains.kotlin.fir.analysis.diagnostics.withSuppressedDiagnostics
-import org.jetbrains.kotlin.fir.declarations.FirRegularClass
 import org.jetbrains.kotlin.fir.resolve.fullyExpandedType
 import org.jetbrains.kotlin.fir.resolve.substitution.ConeSubstitutorByMap
 import org.jetbrains.kotlin.fir.symbols.impl.FirRegularClassSymbol
@@ -24,7 +23,7 @@ fun checkInconsistentTypeParameters(
     firTypeRefClasses: List<Pair<FirTypeRef?, FirRegularClassSymbol>>,
     context: CheckerContext,
     reporter: DiagnosticReporter,
-    source: FirSourceElement?,
+    source: KtSourceElement?,
     isValues: Boolean
 ) {
     val result = buildDeepSubstitutionMultimap(firTypeRefClasses, context)

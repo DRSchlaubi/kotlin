@@ -9,7 +9,6 @@ import com.intellij.psi.util.PsiTreeUtil
 import org.jetbrains.kotlin.fir.FirElement
 import org.jetbrains.kotlin.fir.declarations.*
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
-import org.jetbrains.kotlin.fir.realPsi
 import org.jetbrains.kotlin.fir.resolve.FirTowerDataContext
 import org.jetbrains.kotlin.fir.resolve.ScopeSession
 import org.jetbrains.kotlin.fir.resolve.asTowerDataElement
@@ -27,11 +26,7 @@ import org.jetbrains.kotlin.analysis.low.level.api.fir.element.builder.FirTowerD
 import org.jetbrains.kotlin.analysis.low.level.api.fir.file.builder.runCustomResolveUnderLock
 import org.jetbrains.kotlin.analysis.low.level.api.fir.file.structure.FirElementsRecorder
 import org.jetbrains.kotlin.analysis.low.level.api.fir.file.structure.KtToFirMapping
-import org.jetbrains.kotlin.analysis.low.level.api.fir.lazy.resolve.RawFirNonLocalDeclarationBuilder
-import org.jetbrains.kotlin.analysis.low.level.api.fir.lazy.resolve.RawFirReplacement
-import org.jetbrains.kotlin.analysis.low.level.api.fir.lazy.resolve.ResolveTreeBuilder
-import org.jetbrains.kotlin.analysis.low.level.api.fir.lazy.resolve.buildFileFirAnnotation
-import org.jetbrains.kotlin.analysis.low.level.api.fir.lazy.resolve.buildFirUserTypeRef
+import org.jetbrains.kotlin.analysis.low.level.api.fir.lazy.resolve.*
 import org.jetbrains.kotlin.analysis.low.level.api.fir.providers.firIdeProvider
 import org.jetbrains.kotlin.analysis.low.level.api.fir.sessions.FirIdeSourcesSession
 import org.jetbrains.kotlin.analysis.low.level.api.fir.util.getElementTextInContext
@@ -42,6 +37,7 @@ import org.jetbrains.kotlin.analysis.project.structure.getKtModule
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.containingClassOrObject
 import org.jetbrains.kotlin.psi.psiUtil.isAncestor
+import org.jetbrains.kotlin.realPsi
 
 object LowLevelFirApiFacadeForResolveOnAir {
 

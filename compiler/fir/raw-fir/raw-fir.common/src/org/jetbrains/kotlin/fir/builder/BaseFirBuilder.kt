@@ -6,6 +6,7 @@
 package org.jetbrains.kotlin.fir.builder
 
 import com.intellij.psi.tree.IElementType
+import org.jetbrains.kotlin.*
 import org.jetbrains.kotlin.KtNodeTypes.*
 import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.descriptors.Modality
@@ -46,7 +47,7 @@ import org.jetbrains.kotlin.util.OperatorNameConventions
 abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Context<T> = Context()) {
     val baseModuleData: FirModuleData = baseSession.moduleData
 
-    abstract fun T.toFirSourceElement(kind: FirFakeSourceElementKind? = null): FirSourceElement
+    abstract fun T.toFirSourceElement(kind: KtFakeSourceElementKind? = null): KtSourceElement
 
     protected val implicitUnitType = baseSession.builtinTypes.unitType
     protected val implicitAnyType = baseSession.builtinTypes.anyType
@@ -150,7 +151,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
     }
 
     fun FirExpression.toReturn(
-        baseSource: FirSourceElement? = source,
+        baseSource: KtSourceElement? = source,
         labelName: String? = null,
         fromKtReturnExpression: Boolean = false
     ): FirReturnExpression {
@@ -169,7 +170,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
 
             source =
                 if (fromKtReturnExpression) baseSource?.realElement()
-                else baseSource?.fakeElement(FirFakeSourceElementKind.ImplicitReturn)
+                else baseSource?.fakeElement(KtFakeSourceElementKind.ImplicitReturn)
             result = this@toReturn
             if (labelName == null) {
                 target = context.firFunctionTargets.lastOrNull { !it.isLambda } ?: FirFunctionTarget(labelName, isLambda = false).apply {
@@ -197,7 +198,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
 
     protected fun T?.toDelegatedSelfType(typeParameters: List<FirTypeParameterRef>, symbol: FirClassLikeSymbol<*>): FirResolvedTypeRef {
         return buildResolvedTypeRef {
-            source = this@toDelegatedSelfType?.toFirSourceElement(FirFakeSourceElementKind.ClassSelfTypeRef)
+            source = this@toDelegatedSelfType?.toFirSourceElement(KtFakeSourceElementKind.ClassSelfTypeRef)
             type = ConeClassLikeTypeImpl(
                 symbol.toLookupTag(),
                 typeParameters.map { ConeTypeParameterTypeImpl(it.symbol.toLookupTag(), false) }.toTypedArray(),
@@ -488,7 +489,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
 
         return buildBlock {
             val baseSource = baseExpression?.toFirSourceElement()
-            val desugaredSource = baseSource?.fakeElement(FirFakeSourceElementKind.DesugaredIncrementOrDecrement)
+            val desugaredSource = baseSource?.fakeElement(KtFakeSourceElementKind.DesugaredIncrementOrDecrement)
             source = desugaredSource
 
             // initialValueVar is only used for postfix increment/decrement (stores the argument value before increment/decrement).
@@ -605,7 +606,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
     ): FirExpression {
         return buildBlock {
             val baseSource = baseExpression?.toFirSourceElement()
-            val desugaredSource = baseSource?.fakeElement(FirFakeSourceElementKind.DesugaredIncrementOrDecrement)
+            val desugaredSource = baseSource?.fakeElement(KtFakeSourceElementKind.DesugaredIncrementOrDecrement)
             source = desugaredSource
 
             val argumentReceiver = argument.receiverExpression
@@ -728,7 +729,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
     ): FirExpression {
         return buildBlock {
             val baseSource = baseExpression?.toFirSourceElement()
-            val desugaredSource = baseSource?.fakeElement(FirFakeSourceElementKind.DesugaredIncrementOrDecrement)
+            val desugaredSource = baseSource?.fakeElement(KtFakeSourceElementKind.DesugaredIncrementOrDecrement)
             source = desugaredSource
 
             val array = argument.arrayExpression
@@ -874,7 +875,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
     }
 
     fun T?.generateAssignment(
-        baseSource: FirSourceElement?,
+        baseSource: KtSourceElement?,
         rhs: T?,
         value: FirExpression, // value is FIR for rhs
         operation: FirOperation,
@@ -900,7 +901,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
             return buildAssignmentOperatorStatement {
                 source = baseSource
                 this.operation = operation
-                leftArgument = withDefaultSourceElementKind(FirFakeSourceElementKind.DesugaredCompoundAssignment) {
+                leftArgument = withDefaultSourceElementKind(KtFakeSourceElementKind.DesugaredCompoundAssignment) {
                     this@generateAssignment?.convert()
                 } ?: buildErrorExpression {
                     source = null
@@ -930,7 +931,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
     // gets a?.{ $subj.x } and turns it to a?.{ $subj.x = v }
     private fun putAssignmentToSafeCall(
         safeCallNonAssignment: FirSafeCallExpression,
-        baseSource: FirSourceElement?,
+        baseSource: KtSourceElement?,
         value: FirExpression
     ): FirSafeCallExpression {
         val nestedAccess = safeCallNonAssignment.regularQualifiedAccess
@@ -951,7 +952,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
 
     private fun generateAugmentedArraySetCall(
         unwrappedReceiver: T,
-        baseSource: FirSourceElement?,
+        baseSource: KtSourceElement?,
         operation: FirOperation,
         rhs: T?,
         convert: T.() -> FirExpression
@@ -992,7 +993,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
 
     private fun generateSetGetBlockForAugmentedArraySetCall(
         unwrappedReceiver: T,
-        baseSource: FirSourceElement?,
+        baseSource: KtSourceElement?,
         operation: FirOperation,
         rhs: T?,
         convert: T.() -> FirExpression
@@ -1076,8 +1077,8 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
         private val zippedParameters: List<Pair<T, FirProperty>>,
         private val packageFqName: FqName,
         private val classFqName: FqName,
-        private val createClassTypeRefWithSourceKind: (FirFakeSourceElementKind) -> FirTypeRef,
-        private val createParameterTypeRefWithSourceKind: (FirProperty, FirFakeSourceElementKind) -> FirTypeRef,
+        private val createClassTypeRefWithSourceKind: (KtFakeSourceElementKind) -> FirTypeRef,
+        private val createParameterTypeRefWithSourceKind: (FirProperty, KtFakeSourceElementKind) -> FirTypeRef,
     ) {
         fun generate() {
             generateComponentFunctions()
@@ -1086,7 +1087,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
         }
 
         private fun generateComponentAccess(
-            parameterSource: FirSourceElement?,
+            parameterSource: KtSourceElement?,
             firProperty: FirProperty,
             classTypeRefWithCorrectSourceKind: FirTypeRef,
             firPropertyReturnTypeRefWithCorrectSourceKind: FirTypeRef
@@ -1116,7 +1117,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
                 componentIndex++
                 val parameterSource = sourceNode?.toFirSourceElement()
                 val componentFunction = buildSimpleFunction {
-                    source = parameterSource?.fakeElement(FirFakeSourceElementKind.DataClassGeneratedMembers)
+                    source = parameterSource?.fakeElement(KtFakeSourceElementKind.DataClassGeneratedMembers)
                     moduleData = baseModuleData
                     origin = FirDeclarationOrigin.Source
                     returnTypeRef = firProperty.returnTypeRef
@@ -1138,8 +1139,8 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
         private fun generateCopyFunction() {
             classBuilder.addDeclaration(
                 buildSimpleFunction {
-                    val classTypeRef = createClassTypeRefWithSourceKind(FirFakeSourceElementKind.DataClassGeneratedMembers)
-                    source = this@DataClassMembersGenerator.source.toFirSourceElement(FirFakeSourceElementKind.DataClassGeneratedMembers)
+                    val classTypeRef = createClassTypeRefWithSourceKind(KtFakeSourceElementKind.DataClassGeneratedMembers)
+                    source = this@DataClassMembersGenerator.source.toFirSourceElement(KtFakeSourceElementKind.DataClassGeneratedMembers)
                     moduleData = baseModuleData
                     origin = FirDeclarationOrigin.Source
                     returnTypeRef = classTypeRef
@@ -1149,9 +1150,9 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
                     dispatchReceiverType = currentDispatchReceiverType()
                     for ((ktParameter, firProperty) in zippedParameters) {
                         val propertyName = firProperty.name
-                        val parameterSource = ktParameter?.toFirSourceElement(FirFakeSourceElementKind.DataClassGeneratedMembers)
+                        val parameterSource = ktParameter?.toFirSourceElement(KtFakeSourceElementKind.DataClassGeneratedMembers)
                         val propertyReturnTypeRef =
-                            createParameterTypeRefWithSourceKind(firProperty, FirFakeSourceElementKind.DataClassGeneratedMembers)
+                            createParameterTypeRefWithSourceKind(firProperty, KtFakeSourceElementKind.DataClassGeneratedMembers)
                         valueParameters += buildValueParameter {
                             source = parameterSource
                             moduleData = baseModuleData
@@ -1187,13 +1188,13 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
 
     private fun FirVariable.toQualifiedAccess(): FirQualifiedAccessExpression = buildPropertyAccessExpression {
         calleeReference = buildResolvedNamedReference {
-            source = this@toQualifiedAccess.source?.fakeElement(FirFakeSourceElementKind.ReferenceInAtomicQualifiedAccess)
+            source = this@toQualifiedAccess.source?.fakeElement(KtFakeSourceElementKind.ReferenceInAtomicQualifiedAccess)
             name = this@toQualifiedAccess.name
             resolvedSymbol = this@toQualifiedAccess.symbol
         }
     }
 
-    protected inline fun <R> withDefaultSourceElementKind(newDefault: FirSourceElementKind, action: () -> R): R {
+    protected inline fun <R> withDefaultSourceElementKind(newDefault: KtSourceElementKind, action: () -> R): R {
         val currentForced = context.forcedElementSourceKind
         context.forcedElementSourceKind = newDefault
         try {
@@ -1203,7 +1204,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
         }
     }
 
-    protected fun buildLabelAndErrorSource(rawName: String, source: FirSourceElement): Pair<FirLabel, FirSourceElement?> {
+    protected fun buildLabelAndErrorSource(rawName: String, source: KtSourceElement): Pair<FirLabel, KtSourceElement?> {
         val firLabel = buildLabel {
             name = KtPsiUtil.unquoteIdentifier(rawName)
             this.source = source
@@ -1214,8 +1215,8 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
 
     protected fun buildExpressionWithErrorLabel(
         element: FirElement?,
-        errorLabelSource: FirSourceElement?,
-        elementSource: FirSourceElement
+        errorLabelSource: KtSourceElement?,
+        elementSource: KtSourceElement
     ): FirElement {
         return if (element != null) {
             if (errorLabelSource != null) {

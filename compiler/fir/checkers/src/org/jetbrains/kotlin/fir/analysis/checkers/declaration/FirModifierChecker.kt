@@ -5,13 +5,16 @@
 
 package org.jetbrains.kotlin.fir.analysis.checkers.declaration
 
+import org.jetbrains.kotlin.KtFakeSourceElementKind
+import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.descriptors.annotations.KotlinTarget
 import org.jetbrains.kotlin.descriptors.annotations.KotlinTarget.Companion.classActualTargets
-import org.jetbrains.kotlin.fir.FirFakeSourceElementKind
-import org.jetbrains.kotlin.fir.FirSourceElement
-import org.jetbrains.kotlin.fir.analysis.checkers.*
+import org.jetbrains.kotlin.fir.analysis.checkers.FirModifier
+import org.jetbrains.kotlin.fir.analysis.checkers.FirModifierList
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.context.findClosest
+import org.jetbrains.kotlin.fir.analysis.checkers.getActualTargetList
+import org.jetbrains.kotlin.fir.analysis.checkers.getModifierList
 import org.jetbrains.kotlin.fir.analysis.diagnostics.DiagnosticReporter
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirDiagnosticFactory2
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirErrors
@@ -32,7 +35,7 @@ object FirModifierChecker : FirBasicDeclarationChecker() {
         if (declaration is FirFile) return
 
         val source = declaration.source ?: return
-        if (source.kind is FirFakeSourceElementKind) return
+        if (source.kind is KtFakeSourceElementKind) return
 
         if (declaration is FirProperty) {
             fun checkPropertyAccessor(propertyAccessor: FirPropertyAccessor?) {
@@ -65,7 +68,7 @@ object FirModifierChecker : FirBasicDeclarationChecker() {
         val parent = context.findClosest<FirDeclaration> {
             it !is FirPrimaryConstructor &&
                     it !is FirProperty &&
-                    it.source?.kind !is FirFakeSourceElementKind
+                    it.source?.kind !is KtFakeSourceElementKind
         }
 
         val actualParents = when (parent) {
@@ -176,7 +179,7 @@ object FirModifierChecker : FirBasicDeclarationChecker() {
     }
 
     private fun checkTarget(
-        modifierSource: FirSourceElement,
+        modifierSource: KtSourceElement,
         modifierToken: KtModifierKeywordToken,
         actualTargets: List<KotlinTarget>,
         parent: FirDeclaration?,
@@ -236,7 +239,7 @@ object FirModifierChecker : FirBasicDeclarationChecker() {
     }
 
     private fun checkParent(
-        modifierSource: FirSourceElement,
+        modifierSource: KtSourceElement,
         modifierToken: KtModifierKeywordToken,
         actualParents: List<KotlinTarget>,
         context: CheckerContext,

@@ -5,8 +5,16 @@
 
 package org.jetbrains.kotlin.analysis.api.fir.components
 
+import org.jetbrains.kotlin.KtSourceElement
+import org.jetbrains.kotlin.analysis.api.KtStarProjectionTypeArgument
+import org.jetbrains.kotlin.analysis.api.KtTypeArgument
+import org.jetbrains.kotlin.analysis.api.KtTypeArgumentWithVariance
+import org.jetbrains.kotlin.analysis.api.diagnostics.KtDiagnosticWithPsi
+import org.jetbrains.kotlin.analysis.api.fir.KtFirAnalysisSession
+import org.jetbrains.kotlin.analysis.api.fir.diagnostics.KT_DIAGNOSTIC_CONVERTER
+import org.jetbrains.kotlin.analysis.api.fir.types.KtFirType
+import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.fir.FirSession
-import org.jetbrains.kotlin.fir.FirSourceElement
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirDiagnostic
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirPsiDiagnostic
 import org.jetbrains.kotlin.fir.analysis.diagnostics.toFirDiagnostics
@@ -16,14 +24,6 @@ import org.jetbrains.kotlin.fir.types.ConeInferenceContext
 import org.jetbrains.kotlin.fir.types.ConeKotlinType
 import org.jetbrains.kotlin.fir.types.ConeStarProjection
 import org.jetbrains.kotlin.fir.types.ConeTypeProjection
-import org.jetbrains.kotlin.analysis.api.KtStarProjectionTypeArgument
-import org.jetbrains.kotlin.analysis.api.KtTypeArgument
-import org.jetbrains.kotlin.analysis.api.KtTypeArgumentWithVariance
-import org.jetbrains.kotlin.analysis.api.diagnostics.KtDiagnosticWithPsi
-import org.jetbrains.kotlin.analysis.api.fir.KtFirAnalysisSession
-import org.jetbrains.kotlin.analysis.api.fir.diagnostics.KT_DIAGNOSTIC_CONVERTER
-import org.jetbrains.kotlin.analysis.api.fir.types.KtFirType
-import org.jetbrains.kotlin.analysis.api.types.KtType
 import org.jetbrains.kotlin.types.TypeCheckerState
 import org.jetbrains.kotlin.types.model.convertVariance
 
@@ -41,8 +41,8 @@ internal interface KtFirAnalysisSessionComponent {
         KT_DIAGNOSTIC_CONVERTER.convert(analysisSession, this as FirDiagnostic)
 
     fun ConeDiagnostic.asKtDiagnostic(
-        source: FirSourceElement,
-        qualifiedAccessSource: FirSourceElement?,
+        source: KtSourceElement,
+        qualifiedAccessSource: KtSourceElement?,
         diagnosticCache: MutableList<FirDiagnostic>
     ): KtDiagnosticWithPsi<*>? {
         val firDiagnostic = toFirDiagnostics(source, qualifiedAccessSource).firstOrNull() ?: return null

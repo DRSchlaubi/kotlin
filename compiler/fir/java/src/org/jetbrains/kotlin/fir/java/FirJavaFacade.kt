@@ -6,6 +6,8 @@
 package org.jetbrains.kotlin.fir.java
 
 import com.intellij.openapi.progress.ProcessCanceledException
+import org.jetbrains.kotlin.KtFakeSourceElement
+import org.jetbrains.kotlin.KtFakeSourceElementKind
 import org.jetbrains.kotlin.builtins.jvm.JavaToKotlinClassMap
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.EffectiveVisibility
@@ -42,6 +44,7 @@ import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.toKtPsiSourceElement
 import org.jetbrains.kotlin.types.Variance.INVARIANT
 import org.jetbrains.kotlin.util.OperatorNameConventions
 
@@ -165,7 +168,7 @@ class FirJavaFacade(
         val valueParametersForAnnotationConstructor = ValueParametersForAnnotationConstructor()
         val classIsAnnotation = javaClass.classKind == ClassKind.ANNOTATION_CLASS
         return buildJavaClass {
-            source = (javaClass as? JavaElementImpl<*>)?.psi?.toFirPsiSourceElement()
+            source = (javaClass as? JavaElementImpl<*>)?.psi?.toKtPsiSourceElement()
             moduleData = baseModuleData
             symbol = classSymbol
             name = javaClass.name
@@ -272,7 +275,7 @@ class FirJavaFacade(
             if (classIsAnnotation) {
                 declarations +=
                     buildConstructorForAnnotationClass(
-                        classSource = (javaClass as? JavaElementImpl<*>)?.psi?.toFirPsiSourceElement(FirFakeSourceElementKind.ImplicitConstructor) as? FirFakeSourceElement,
+                        classSource = (javaClass as? JavaElementImpl<*>)?.psi?.toKtPsiSourceElement(KtFakeSourceElementKind.ImplicitConstructor) as? KtFakeSourceElement,
                         constructorId = constructorId,
                         ownerClassBuilder = this,
                         valueParametersForAnnotationConstructor = valueParametersForAnnotationConstructor
@@ -310,7 +313,7 @@ class FirJavaFacade(
         val returnType = javaField.type
         return when {
             javaField.isEnumEntry -> buildEnumEntry {
-                source = (javaField as? JavaElementImpl<*>)?.psi?.toFirPsiSourceElement()
+                source = (javaField as? JavaElementImpl<*>)?.psi?.toKtPsiSourceElement()
                 moduleData = baseModuleData
                 symbol = FirEnumEntrySymbol(fieldId)
                 name = fieldName
@@ -333,7 +336,7 @@ class FirJavaFacade(
                 containingClassForStaticMemberAttr = ConeClassLikeLookupTagImpl(classId)
             }
             else -> buildJavaField {
-                source = (javaField as? JavaElementImpl<*>)?.psi?.toFirPsiSourceElement()
+                source = (javaField as? JavaElementImpl<*>)?.psi?.toKtPsiSourceElement()
                 moduleData = baseModuleData
                 symbol = FirFieldSymbol(fieldId)
                 name = fieldName
@@ -383,7 +386,7 @@ class FirJavaFacade(
         val returnType = javaMethod.returnType
         return buildJavaMethod {
             moduleData = baseModuleData
-            source = (javaMethod as? JavaElementImpl<*>)?.psi?.toFirPsiSourceElement()
+            source = (javaMethod as? JavaElementImpl<*>)?.psi?.toKtPsiSourceElement()
             symbol = methodSymbol
             name = methodName
             returnTypeRef = returnType.toFirJavaTypeRef(session, javaTypeParameterStack)
@@ -425,7 +428,7 @@ class FirJavaFacade(
     private fun convertJavaAnnotationMethodToValueParameter(javaMethod: JavaMethod, firJavaMethod: FirJavaMethod): FirJavaValueParameter =
         buildJavaValueParameter {
             source = (javaMethod as? JavaElementImpl<*>)?.psi
-                ?.toFirPsiSourceElement(FirFakeSourceElementKind.ImplicitJavaAnnotationConstructor)
+                ?.toKtPsiSourceElement(KtFakeSourceElementKind.ImplicitJavaAnnotationConstructor)
             moduleData = baseModuleData
             returnTypeRef = firJavaMethod.returnTypeRef
             name = javaMethod.name
@@ -443,7 +446,7 @@ class FirJavaFacade(
     ): FirJavaConstructor {
         val constructorSymbol = FirConstructorSymbol(constructorId)
         return buildJavaConstructor {
-            source = (javaConstructor as? JavaElementImpl<*>)?.psi?.toFirPsiSourceElement()
+            source = (javaConstructor as? JavaElementImpl<*>)?.psi?.toKtPsiSourceElement()
             moduleData = baseModuleData
             symbol = constructorSymbol
             isInner = javaClass.outerClass != null && !javaClass.isStatic
@@ -481,7 +484,7 @@ class FirJavaFacade(
     }
 
     private fun buildConstructorForAnnotationClass(
-        classSource: FirFakeSourceElement?,
+        classSource: KtFakeSourceElement?,
         constructorId: CallableId,
         ownerClassBuilder: FirJavaClassBuilder,
         valueParametersForAnnotationConstructor: ValueParametersForAnnotationConstructor

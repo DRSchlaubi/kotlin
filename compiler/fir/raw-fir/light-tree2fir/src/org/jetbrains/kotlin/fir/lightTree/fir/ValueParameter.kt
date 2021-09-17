@@ -5,8 +5,13 @@
 
 package org.jetbrains.kotlin.fir.lightTree.fir
 
-import org.jetbrains.kotlin.fir.*
-import org.jetbrains.kotlin.fir.declarations.*
+import org.jetbrains.kotlin.KtFakeSourceElementKind
+import org.jetbrains.kotlin.fakeElement
+import org.jetbrains.kotlin.fir.FirModuleData
+import org.jetbrains.kotlin.fir.copyWithNewSourceKind
+import org.jetbrains.kotlin.fir.declarations.FirDeclarationOrigin
+import org.jetbrains.kotlin.fir.declarations.FirProperty
+import org.jetbrains.kotlin.fir.declarations.FirValueParameter
 import org.jetbrains.kotlin.fir.declarations.builder.buildProperty
 import org.jetbrains.kotlin.fir.declarations.impl.FirDeclarationStatusImpl
 import org.jetbrains.kotlin.fir.declarations.impl.FirDefaultPropertyGetter
@@ -48,11 +53,11 @@ class ValueParameter(
         }
 
         return buildProperty {
-            val propertySource = firValueParameter.source?.fakeElement(FirFakeSourceElementKind.PropertyFromParameter)
+            val propertySource = firValueParameter.source?.fakeElement(KtFakeSourceElementKind.PropertyFromParameter)
             source = propertySource
             this.moduleData = moduleData
             origin = FirDeclarationOrigin.Source
-            returnTypeRef = type.copyWithNewSourceKind(FirFakeSourceElementKind.PropertyFromParameter)
+            returnTypeRef = type.copyWithNewSourceKind(KtFakeSourceElementKind.PropertyFromParameter)
             this.name = name
             initializer = buildPropertyAccessExpression {
                 source = propertySource
@@ -75,12 +80,12 @@ class ValueParameter(
                 isLateInit = false
             }
             annotations += this@ValueParameter.firValueParameter.annotations
-            val defaultAccessorSource = propertySource?.fakeElement(FirFakeSourceElementKind.DefaultAccessor)
+            val defaultAccessorSource = propertySource?.fakeElement(KtFakeSourceElementKind.DefaultAccessor)
             getter = FirDefaultPropertyGetter(
                 defaultAccessorSource,
                 moduleData,
                 FirDeclarationOrigin.Source,
-                type.copyWithNewSourceKind(FirFakeSourceElementKind.DefaultAccessor),
+                type.copyWithNewSourceKind(KtFakeSourceElementKind.DefaultAccessor),
                 modifiers.getVisibility(),
                 symbol,
             )
@@ -88,7 +93,7 @@ class ValueParameter(
                 defaultAccessorSource,
                 moduleData,
                 FirDeclarationOrigin.Source,
-                type.copyWithNewSourceKind(FirFakeSourceElementKind.DefaultAccessor),
+                type.copyWithNewSourceKind(KtFakeSourceElementKind.DefaultAccessor),
                 modifiers.getVisibility(),
                 symbol,
             ) else null

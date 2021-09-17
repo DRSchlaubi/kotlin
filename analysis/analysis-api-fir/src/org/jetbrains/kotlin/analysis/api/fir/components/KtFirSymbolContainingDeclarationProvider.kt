@@ -6,18 +6,18 @@
 package org.jetbrains.kotlin.analysis.api.fir.components
 
 import com.intellij.psi.PsiElement
-import org.jetbrains.kotlin.fir.FirFakeSourceElementKind
-import org.jetbrains.kotlin.fir.FirRealSourceElementKind
-import org.jetbrains.kotlin.fir.declarations.FirDeclaration
-import org.jetbrains.kotlin.fir.psi
-import org.jetbrains.kotlin.analysis.low.level.api.fir.util.parentOfType
-import org.jetbrains.kotlin.analysis.api.tokens.ValidityToken
+import org.jetbrains.kotlin.KtFakeSourceElementKind
+import org.jetbrains.kotlin.KtRealSourceElementKind
 import org.jetbrains.kotlin.analysis.api.components.KtSymbolContainingDeclarationProvider
 import org.jetbrains.kotlin.analysis.api.fir.KtFirAnalysisSession
 import org.jetbrains.kotlin.analysis.api.fir.symbols.KtFirSymbol
 import org.jetbrains.kotlin.analysis.api.symbols.*
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolKind
 import org.jetbrains.kotlin.analysis.api.symbols.markers.KtSymbolWithKind
+import org.jetbrains.kotlin.analysis.api.tokens.ValidityToken
+import org.jetbrains.kotlin.analysis.low.level.api.fir.util.parentOfType
+import org.jetbrains.kotlin.fir.declarations.FirDeclaration
+import org.jetbrains.kotlin.psi
 import org.jetbrains.kotlin.psi.*
 
 internal class KtFirSymbolContainingDeclarationProvider(
@@ -69,10 +69,10 @@ internal class KtFirSymbolContainingDeclarationProvider(
         val source = symbol.firRef.withFir(action = FirDeclaration::source)
         val thisSource = when (source?.kind) {
             null -> error("PSI should present for declaration built by Kotlin code")
-            FirFakeSourceElementKind.ImplicitConstructor ->
+            KtFakeSourceElementKind.ImplicitConstructor ->
                 return source.psi as KtDeclaration
-            FirFakeSourceElementKind.PropertyFromParameter -> return source.psi?.parentOfType<KtPrimaryConstructor>()!!
-            FirRealSourceElementKind -> source.psi!!
+            KtFakeSourceElementKind.PropertyFromParameter -> return source.psi?.parentOfType<KtPrimaryConstructor>()!!
+            KtRealSourceElementKind -> source.psi!!
             else -> error("Unexpected FirSourceElement: kind=${source.kind} element=${source.psi!!::class.simpleName}")
         }
 

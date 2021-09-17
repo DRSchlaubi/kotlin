@@ -5,11 +5,11 @@
 
 package org.jetbrains.kotlin.fir.analysis.checkers.extended
 
+import org.jetbrains.kotlin.KtFakeSourceElement
+import org.jetbrains.kotlin.KtFakeSourceElementKind
+import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.descriptors.Visibility
-import org.jetbrains.kotlin.fir.FirFakeSourceElement
-import org.jetbrains.kotlin.fir.FirFakeSourceElementKind
-import org.jetbrains.kotlin.fir.FirSourceElement
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.context.findClosest
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.isLocalMember
@@ -29,12 +29,12 @@ object RedundantVisibilityModifierSyntaxChecker : FirDeclarationSyntaxChecker<Fi
 
     override fun checkLightTree(
         element: FirDeclaration,
-        source: FirSourceElement,
+        source: KtSourceElement,
         context: CheckerContext,
         reporter: DiagnosticReporter
     ) {
-        if (element is FirConstructor && source.kind is FirFakeSourceElementKind) return
-        if (source is FirFakeSourceElement) return
+        if (element is FirConstructor && source.kind is KtFakeSourceElementKind) return
+        if (source is KtFakeSourceElement) return
         if (
             element !is FirMemberDeclaration
             && !(element is FirPropertyAccessor && element.visibility == context.containingPropertyVisibility)

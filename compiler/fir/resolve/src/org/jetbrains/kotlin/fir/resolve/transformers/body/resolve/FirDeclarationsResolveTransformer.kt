@@ -5,13 +5,16 @@
 
 package org.jetbrains.kotlin.fir.resolve.transformers.body.resolve
 
+import org.jetbrains.kotlin.KtFakeSourceElementKind
 import org.jetbrains.kotlin.descriptors.ClassKind
-import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.descriptors.Visibility
+import org.jetbrains.kotlin.fakeElement
 import org.jetbrains.kotlin.fir.*
 import org.jetbrains.kotlin.fir.declarations.*
 import org.jetbrains.kotlin.fir.declarations.builder.buildValueParameter
-import org.jetbrains.kotlin.fir.declarations.impl.*
+import org.jetbrains.kotlin.fir.declarations.impl.FirDeclarationStatusImpl
+import org.jetbrains.kotlin.fir.declarations.impl.FirDefaultPropertyAccessor
+import org.jetbrains.kotlin.fir.declarations.impl.FirDefaultPropertyBackingField
 import org.jetbrains.kotlin.fir.declarations.synthetic.FirSyntheticProperty
 import org.jetbrains.kotlin.fir.declarations.utils.*
 import org.jetbrains.kotlin.fir.diagnostics.ConeSimpleDiagnostic
@@ -810,7 +813,7 @@ open class FirDeclarationsResolveTransformer(transformer: FirBodyResolveTransfor
             lambda.valueParameters.isEmpty() && singleParameterType != null -> {
                 val name = Name.identifier("it")
                 val itParam = buildValueParameter {
-                    source = lambda.source?.fakeElement(FirFakeSourceElementKind.ItLambdaParameter)
+                    source = lambda.source?.fakeElement(KtFakeSourceElementKind.ItLambdaParameter)
                     moduleData = session.moduleData
                     origin = FirDeclarationOrigin.Source
                     returnTypeRef = singleParameterType.toFirResolvedTypeRef()
@@ -854,7 +857,7 @@ open class FirDeclarationsResolveTransformer(transformer: FirBodyResolveTransfor
                     override fun <E : FirElement> transformElement(element: E, data: FirExpression): E {
                         if (element == lastStatement) {
                             val returnExpression = buildReturnExpression {
-                                source = element.source?.fakeElement(FirFakeSourceElementKind.ImplicitReturn)
+                                source = element.source?.fakeElement(KtFakeSourceElementKind.ImplicitReturn)
                                 result = lastStatement
                                 target = FirFunctionTarget(null, isLambda = this@addReturn.isLambda).also {
                                     it.bind(this@addReturn)
@@ -975,7 +978,7 @@ open class FirDeclarationsResolveTransformer(transformer: FirBodyResolveTransfor
             }
             is FirErrorTypeRef -> buildErrorTypeRef {
                 diagnostic = this@toExpectedTypeRef.diagnostic
-                this@toExpectedTypeRef.source?.fakeElement(FirFakeSourceElementKind.ImplicitTypeRef)?.let {
+                this@toExpectedTypeRef.source?.fakeElement(KtFakeSourceElementKind.ImplicitTypeRef)?.let {
                     source = it
                 }
             }
@@ -983,7 +986,7 @@ open class FirDeclarationsResolveTransformer(transformer: FirBodyResolveTransfor
                 buildResolvedTypeRef {
                     type = this@toExpectedTypeRef.coneType
                     annotations.addAll(this@toExpectedTypeRef.annotations)
-                    this@toExpectedTypeRef.source?.fakeElement(FirFakeSourceElementKind.PropertyFromParameter)?.let {
+                    this@toExpectedTypeRef.source?.fakeElement(KtFakeSourceElementKind.PropertyFromParameter)?.let {
                         source = it
                     }
                 }

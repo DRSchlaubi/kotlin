@@ -8,6 +8,9 @@ package org.jetbrains.kotlin.fir.lightTree.converter
 import com.intellij.lang.LighterASTNode
 import com.intellij.psi.TokenType
 import com.intellij.util.diff.FlyweightCapableTreeStructure
+import org.jetbrains.kotlin.KtFakeSourceElementKind
+import org.jetbrains.kotlin.KtLightSourceElement
+import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.KtNodeTypes.*
 import org.jetbrains.kotlin.builtins.StandardNames
 import org.jetbrains.kotlin.builtins.StandardNames.DEFAULT_VALUE_PARAMETER
@@ -16,6 +19,7 @@ import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
+import org.jetbrains.kotlin.fakeElement
 import org.jetbrains.kotlin.fir.*
 import org.jetbrains.kotlin.fir.builder.*
 import org.jetbrains.kotlin.fir.contracts.FirContractDescription
@@ -39,7 +43,6 @@ import org.jetbrains.kotlin.fir.lightTree.fir.modifier.TypeProjectionModifier
 import org.jetbrains.kotlin.fir.references.builder.buildExplicitSuperReference
 import org.jetbrains.kotlin.fir.references.builder.buildExplicitThisReference
 import org.jetbrains.kotlin.fir.references.builder.buildSimpleNamedReference
-import org.jetbrains.kotlin.fir.references.impl.FirReferencePlaceholderForResolvedAnnotations
 import org.jetbrains.kotlin.fir.scopes.FirScopeProvider
 import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.*
@@ -143,7 +146,7 @@ class DeclarationsConverter(
         return FirBlockBuilder().apply {
             source = block.toFirSourceElement()
             firStatements.forEach { firStatement ->
-                val isForLoopBlock = firStatement is FirBlock && firStatement.source?.kind == FirFakeSourceElementKind.DesugaredForLoop
+                val isForLoopBlock = firStatement is FirBlock && firStatement.source?.kind == KtFakeSourceElementKind.DesugaredForLoop
                 if (firStatement !is FirBlock || isForLoopBlock || firStatement.annotations.isNotEmpty()) {
                     statements += firStatement
                 } else {
@@ -171,7 +174,7 @@ class DeclarationsConverter(
         }
     }
 
-    private fun convertImportAlias(importAlias: LighterASTNode): Pair<String, FirSourceElement>? {
+    private fun convertImportAlias(importAlias: LighterASTNode): Pair<String, KtSourceElement>? {
         importAlias.forEachChildren {
             when (it.tokenType) {
                 IDENTIFIER -> return Pair(it.asText, it.toFirSourceElement())
@@ -188,7 +191,7 @@ class DeclarationsConverter(
         var importedFqName: FqName? = null
         var isAllUnder = false
         var aliasName: String? = null
-        var aliasSource: FirSourceElement? = null
+        var aliasSource: KtSourceElement? = null
         importDirective.forEachChildren {
             when (it.tokenType) {
                 DOT_QUALIFIED_EXPRESSION, REFERENCE_EXPRESSION -> importedFqName = FqName(it.asText)
@@ -455,7 +458,7 @@ class DeclarationsConverter(
 
                     val delegationSpecifiers = superTypeList?.let { convertDelegationSpecifiers(it) }
                     var delegatedSuperTypeRef: FirTypeRef? = delegationSpecifiers?.delegatedSuperTypeRef
-                    val delegatedConstructorSource: FirLightSourceElement? = delegationSpecifiers?.delegatedConstructorSource
+                    val delegatedConstructorSource: KtLightSourceElement? = delegationSpecifiers?.delegatedConstructorSource
 
                     val superTypeCallEntry = delegationSpecifiers?.delegatedConstructorArguments.orEmpty()
                     val superTypeRefs = mutableListOf<FirTypeRef>()
@@ -595,7 +598,7 @@ class DeclarationsConverter(
                     val superTypeCallEntry = mutableListOf<FirExpression>()
                     var delegatedSuperTypeRef: FirTypeRef? = null
                     var classBody: LighterASTNode? = null
-                    var delegatedConstructorSource: FirLightSourceElement? = null
+                    var delegatedConstructorSource: KtLightSourceElement? = null
                     var delegateFields: List<FirField>? = null
 
                     objectDeclaration.forEachChildren {
@@ -693,7 +696,7 @@ class DeclarationsConverter(
             annotations += modifiers.annotations
             initializer = withChildClassName(enumEntryName, isExpect = false) {
                 buildAnonymousObjectExpression {
-                    val entrySource = enumEntry.toFirSourceElement(FirFakeSourceElementKind.EnumInitializer)
+                    val entrySource = enumEntry.toFirSourceElement(KtFakeSourceElementKind.EnumInitializer)
                     source = entrySource
                     anonymousObject = buildAnonymousObject {
                         source = entrySource
@@ -781,9 +784,9 @@ class DeclarationsConverter(
      */
     private fun convertPrimaryConstructor(
         primaryConstructor: LighterASTNode?,
-        selfTypeSource: FirSourceElement?,
+        selfTypeSource: KtSourceElement?,
         classWrapper: ClassWrapper,
-        delegatedConstructorSource: FirLightSourceElement?,
+        delegatedConstructorSource: KtLightSourceElement?,
         isEnumEntry: Boolean = false,
         containingClassIsExpectClass: Boolean
     ): PrimaryConstructor? {
@@ -803,19 +806,19 @@ class DeclarationsConverter(
 
         val defaultVisibility = classWrapper.defaultConstructorVisibility()
         val firDelegatedCall = buildDelegatedConstructorCall {
-            source = delegatedConstructorSource ?: selfTypeSource?.fakeElement(FirFakeSourceElementKind.DelegatingConstructorCall)
-            constructedTypeRef = classWrapper.delegatedSuperTypeRef.copyWithNewSourceKind(FirFakeSourceElementKind.ImplicitTypeRef)
+            source = delegatedConstructorSource ?: selfTypeSource?.fakeElement(KtFakeSourceElementKind.DelegatingConstructorCall)
+            constructedTypeRef = classWrapper.delegatedSuperTypeRef.copyWithNewSourceKind(KtFakeSourceElementKind.ImplicitTypeRef)
             isThis = false
             calleeReference = buildExplicitSuperReference {
                 //[dirty] in case of enum classWrapper.delegatedSuperTypeRef.source is whole enum source
                 source = if (!isEnumEntry) {
-                    classWrapper.delegatedSuperTypeRef.source?.fakeElement(FirFakeSourceElementKind.DelegatingConstructorCall)
-                        ?: this@buildDelegatedConstructorCall.source?.fakeElement(FirFakeSourceElementKind.DelegatingConstructorCall)
+                    classWrapper.delegatedSuperTypeRef.source?.fakeElement(KtFakeSourceElementKind.DelegatingConstructorCall)
+                        ?: this@buildDelegatedConstructorCall.source?.fakeElement(KtFakeSourceElementKind.DelegatingConstructorCall)
                 } else {
                     delegatedConstructorSource
                         ?.lighterASTNode
                         ?.getChildNodeByType(CONSTRUCTOR_CALLEE)
-                        ?.toFirSourceElement(FirFakeSourceElementKind.DelegatingConstructorCall)
+                        ?.toFirSourceElement(KtFakeSourceElementKind.DelegatingConstructorCall)
                         ?: this@buildDelegatedConstructorCall.source
                 }
 
@@ -838,7 +841,7 @@ class DeclarationsConverter(
         return PrimaryConstructor(
             buildPrimaryConstructor {
                 source = primaryConstructor?.toFirSourceElement()
-                    ?: selfTypeSource?.fakeElement(FirFakeSourceElementKind.ImplicitConstructor)
+                    ?: selfTypeSource?.fakeElement(KtFakeSourceElementKind.ImplicitConstructor)
                 moduleData = baseModuleData
                 origin = FirDeclarationOrigin.Source
                 returnTypeRef = classWrapper.delegatedSelfTypeRef
@@ -954,14 +957,14 @@ class DeclarationsConverter(
 
         return buildDelegatedConstructorCall {
             source = if (isImplicit) {
-                constructorDelegationCall.toFirSourceElement().fakeElement(FirFakeSourceElementKind.ImplicitConstructor)
+                constructorDelegationCall.toFirSourceElement().fakeElement(KtFakeSourceElementKind.ImplicitConstructor)
             } else {
                 constructorDelegationCall.toFirSourceElement()
             }
-            constructedTypeRef = delegatedType.copyWithNewSourceKind(FirFakeSourceElementKind.ImplicitTypeRef)
+            constructedTypeRef = delegatedType.copyWithNewSourceKind(KtFakeSourceElementKind.ImplicitTypeRef)
             this.isThis = isThis
             val calleeKind =
-                if (isImplicit) FirFakeSourceElementKind.ImplicitConstructor else FirFakeSourceElementKind.DelegatingConstructorCall
+                if (isImplicit) KtFakeSourceElementKind.ImplicitConstructor else KtFakeSourceElementKind.DelegatingConstructorCall
             val calleeSource = constructorDelegationCall.getChildNodeByType(CONSTRUCTOR_DELEGATION_REFERENCE)
                 ?.toFirSourceElement(calleeKind)
                 ?: this@buildDelegatedConstructorCall.source?.fakeElement(calleeKind)
@@ -1136,7 +1139,7 @@ class DeclarationsConverter(
                     }
                     this.getter = convertedAccessors.find { it.isGetter }
                         ?: FirDefaultPropertyGetter(
-                            property.toFirSourceElement(FirFakeSourceElementKind.DefaultAccessor), moduleData, FirDeclarationOrigin.Source, returnType, propertyVisibility, symbol,
+                            property.toFirSourceElement(KtFakeSourceElementKind.DefaultAccessor), moduleData, FirDeclarationOrigin.Source, returnType, propertyVisibility, symbol,
                         ).also {
                             it.status = defaultAccessorStatus()
                             it.initContainingClassAttr()
@@ -1145,7 +1148,7 @@ class DeclarationsConverter(
                     this.setter = convertedAccessors.find { it.isSetter }
                         ?: if (isVar) {
                             FirDefaultPropertySetter(
-                                property.toFirSourceElement(FirFakeSourceElementKind.DefaultAccessor),
+                                property.toFirSourceElement(KtFakeSourceElementKind.DefaultAccessor),
                                 moduleData,
                                 FirDeclarationOrigin.Source,
                                 returnType,
@@ -1256,7 +1259,7 @@ class DeclarationsConverter(
         var modifiers = Modifier()
         var isGetter = true
         var returnType: FirTypeRef? = null
-        val propertyTypeRefToUse = propertyTypeRef.copyWithNewSourceKind(FirFakeSourceElementKind.ImplicitTypeRef)
+        val propertyTypeRefToUse = propertyTypeRef.copyWithNewSourceKind(KtFakeSourceElementKind.ImplicitTypeRef)
         var firValueParameters: FirValueParameter = buildDefaultSetterValueParameter {
             moduleData = baseModuleData
             origin = FirDeclarationOrigin.Source
@@ -1384,7 +1387,7 @@ class DeclarationsConverter(
             FirDefaultPropertyBackingField(
                 moduleData = baseModuleData,
                 annotations = modifiers.annotations,
-                returnTypeRef = propertyReturnType.copyWithNewSourceKind(FirFakeSourceElementKind.DefaultAccessor),
+                returnTypeRef = propertyReturnType.copyWithNewSourceKind(KtFakeSourceElementKind.DefaultAccessor),
                 isVar = isVar,
                 propertySymbol = propertySymbol,
                 status = status,
@@ -1654,7 +1657,7 @@ class DeclarationsConverter(
         val delegatedSuperTypeRef: FirTypeRef?,
         val superTypesRef: List<FirTypeRef>,
         val delegatedConstructorArguments: List<FirExpression>,
-        val delegatedConstructorSource: FirLightSourceElement?,
+        val delegatedConstructorSource: KtLightSourceElement?,
         val delegateFields: List<FirField>,
     )
 
@@ -1662,7 +1665,7 @@ class DeclarationsConverter(
         val superTypeRefs = mutableListOf<FirTypeRef>()
         val superTypeCallEntry = mutableListOf<FirExpression>()
         var delegatedSuperTypeRef: FirTypeRef? = null
-        var delegateConstructorSource: FirLightSourceElement? = null
+        var delegateConstructorSource: KtLightSourceElement? = null
         val delegateFields = mutableListOf<FirField>()
         delegationSpecifiers.forEachChildren {
             when (it.tokenType) {
@@ -1673,7 +1676,7 @@ class DeclarationsConverter(
                     delegatedSuperTypeRef = first
                     superTypeRefs += first
                     superTypeCallEntry += second
-                    delegateConstructorSource = it.toFirSourceElement(FirFakeSourceElementKind.DelegatingConstructorCall)
+                    delegateConstructorSource = it.toFirSourceElement(KtFakeSourceElementKind.DelegatingConstructorCall)
                 }
                 DELEGATED_SUPER_TYPE_ENTRY -> {
                     superTypeRefs += convertExplicitDelegation(it, delegateFields)
@@ -1728,7 +1731,7 @@ class DeclarationsConverter(
         val delegateName = Name.special("<\$\$delegate_${delegateFields.size}>")
         delegateFields.add(
             buildField {
-                source = calculatedFirExpression.source?.fakeElement(FirFakeSourceElementKind.ClassDelegationField)
+                source = calculatedFirExpression.source?.fakeElement(KtFakeSourceElementKind.ClassDelegationField)
                 moduleData = baseModuleData
                 origin = FirDeclarationOrigin.Synthetic
                 name = delegateName
@@ -1916,7 +1919,7 @@ class DeclarationsConverter(
      * @see org.jetbrains.kotlin.parsing.KotlinParsing.parseNullableTypeSuffix
      */
     private fun convertNullableType(
-        typeRefSource: FirSourceElement,
+        typeRefSource: KtSourceElement,
         nullableType: LighterASTNode,
         allTypeModifiers: MutableList<TypeModifier>,
         isNullable: Boolean = true
@@ -1947,15 +1950,15 @@ class DeclarationsConverter(
      * @see org.jetbrains.kotlin.parsing.KotlinParsing.parseUserType
      */
     private fun convertUserType(
-        typeRefSource: FirSourceElement,
+        typeRefSource: KtSourceElement,
         userType: LighterASTNode,
         isNullable: Boolean = false
     ): FirTypeRef {
         var simpleFirUserType: FirUserTypeRef? = null
         var identifier: String? = null
-        var identifierSource: FirSourceElement? = null
+        var identifierSource: KtSourceElement? = null
         val firTypeArguments = mutableListOf<FirTypeProjection>()
-        var typeArgumentsSource: FirSourceElement? = null
+        var typeArgumentsSource: KtSourceElement? = null
         userType.forEachChildren {
             when (it.tokenType) {
                 USER_TYPE -> simpleFirUserType = convertUserType(typeRefSource, it) as? FirUserTypeRef //simple user type
@@ -2031,7 +2034,7 @@ class DeclarationsConverter(
      * @see org.jetbrains.kotlin.parsing.KotlinParsing.parseFunctionType
      */
     private fun convertFunctionType(
-        typeRefSource: FirSourceElement,
+        typeRefSource: KtSourceElement,
         functionType: LighterASTNode,
         isNullable: Boolean = false,
         isSuspend: Boolean = false

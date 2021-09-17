@@ -6,6 +6,8 @@
 package org.jetbrains.kotlin.fir.session
 
 import com.intellij.psi.PsiFile
+import org.jetbrains.kotlin.KtPsiSourceElement
+import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.config.JvmAnalysisFlags
 import org.jetbrains.kotlin.config.LanguageVersionSettings
 import org.jetbrains.kotlin.fir.*
@@ -21,8 +23,8 @@ import org.jetbrains.kotlin.fir.extensions.FirExtensionService
 import org.jetbrains.kotlin.fir.extensions.FirPredicateBasedProvider
 import org.jetbrains.kotlin.fir.extensions.FirRegisteredPluginAnnotations
 import org.jetbrains.kotlin.fir.java.FirJavaVisibilityChecker
-import org.jetbrains.kotlin.fir.java.enhancement.FirAnnotationTypeQualifierResolver
 import org.jetbrains.kotlin.fir.java.FirJvmDefaultModeComponent
+import org.jetbrains.kotlin.fir.java.enhancement.FirAnnotationTypeQualifierResolver
 import org.jetbrains.kotlin.fir.resolve.*
 import org.jetbrains.kotlin.fir.resolve.calls.ConeCallConflictResolverFactory
 import org.jetbrains.kotlin.fir.resolve.calls.FirSyntheticNamesProvider
@@ -31,11 +33,11 @@ import org.jetbrains.kotlin.fir.resolve.inference.InferenceComponents
 import org.jetbrains.kotlin.fir.resolve.providers.impl.FirQualifierResolverImpl
 import org.jetbrains.kotlin.fir.resolve.providers.impl.FirTypeResolverImpl
 import org.jetbrains.kotlin.fir.resolve.transformers.FirPhaseCheckingPhaseManager
-import org.jetbrains.kotlin.fir.symbols.FirPhaseManager
 import org.jetbrains.kotlin.fir.resolve.transformers.plugin.GeneratedClassIndex
 import org.jetbrains.kotlin.fir.scopes.impl.FirDeclaredMemberScopeProvider
 import org.jetbrains.kotlin.fir.scopes.impl.FirIntersectionOverrideStorage
 import org.jetbrains.kotlin.fir.scopes.impl.FirSubstitutionOverrideStorage
+import org.jetbrains.kotlin.fir.symbols.FirPhaseManager
 import org.jetbrains.kotlin.fir.types.FirCorrespondingSupertypesCache
 import org.jetbrains.kotlin.incremental.components.LookupTracker
 import org.jetbrains.kotlin.resolve.jvm.modules.JavaModuleResolver
@@ -91,8 +93,8 @@ fun FirSession.registerResolveComponents(lookupTracker: LookupTracker? = null) {
     register(FirNameConflictsTrackerComponent::class, FirNameConflictsTracker())
     register(FirModuleVisibilityChecker::class, FirModuleVisibilityChecker.Standard(this))
     if (lookupTracker != null) {
-        val firFileToPath: (FirSourceElement) -> String = {
-            val psiSource = (it as? FirPsiSourceElement) ?: TODO("Not implemented for non-FirPsiSourceElement")
+        val firFileToPath: (KtSourceElement) -> String = {
+            val psiSource = (it as? KtPsiSourceElement) ?: TODO("Not implemented for non-FirPsiSourceElement")
             ((psiSource.psi as? PsiFile) ?: psiSource.psi.containingFile).virtualFile.path
         }
         register(

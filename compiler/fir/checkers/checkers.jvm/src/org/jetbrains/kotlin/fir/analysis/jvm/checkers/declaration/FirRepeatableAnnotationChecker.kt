@@ -6,10 +6,10 @@
 package org.jetbrains.kotlin.fir.analysis.jvm.checkers.declaration
 
 //import org.jetbrains.kotlin.builtins.StandardNames
+import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.descriptors.annotations.KotlinTarget
-import org.jetbrains.kotlin.fir.FirSourceElement
 import org.jetbrains.kotlin.fir.analysis.checkers.containsRepeatableAnnotation
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirAnnotatedDeclarationChecker
@@ -149,7 +149,7 @@ object FirRepeatableAnnotationChecker : FirAnnotatedDeclarationChecker() {
     private fun checkRepeatableAnnotationContainer(
         annotationClass: FirRegularClass,
         containerClass: FirRegularClassSymbol,
-        annotationSource: FirSourceElement?,
+        annotationSource: KtSourceElement?,
         context: CheckerContext,
         reporter: DiagnosticReporter
     ) {
@@ -161,7 +161,7 @@ object FirRepeatableAnnotationChecker : FirAnnotatedDeclarationChecker() {
     private fun checkContainerParameters(
         containerClass: FirRegularClassSymbol,
         annotationClass: FirRegularClass,
-        annotationSource: FirSourceElement?,
+        annotationSource: KtSourceElement?,
         context: CheckerContext,
         reporter: DiagnosticReporter
     ) {
@@ -201,7 +201,7 @@ object FirRepeatableAnnotationChecker : FirAnnotatedDeclarationChecker() {
     private fun checkContainerRetention(
         containerClass: FirRegularClassSymbol,
         annotationClass: FirRegularClass,
-        annotationSource: FirSourceElement?,
+        annotationSource: KtSourceElement?,
         context: CheckerContext,
         reporter: DiagnosticReporter
     ) {
@@ -223,7 +223,7 @@ object FirRepeatableAnnotationChecker : FirAnnotatedDeclarationChecker() {
     private fun checkContainerTarget(
         containerClass: FirRegularClassSymbol,
         annotationClass: FirRegularClass,
-        annotationSource: FirSourceElement?,
+        annotationSource: KtSourceElement?,
         context: CheckerContext,
         reporter: DiagnosticReporter
     ) {

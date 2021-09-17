@@ -5,16 +5,15 @@
 
 package org.jetbrains.kotlin.fir.resolve
 
+import org.jetbrains.kotlin.KtFakeSourceElementKind
+import org.jetbrains.kotlin.KtSourceElement
 import org.jetbrains.kotlin.builtins.functions.FunctionClassKind
 import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.descriptors.ClassKind
+import org.jetbrains.kotlin.fakeElement
 import org.jetbrains.kotlin.fir.*
 import org.jetbrains.kotlin.fir.declarations.*
-import org.jetbrains.kotlin.fir.declarations.utils.canNarrowDownGetterType
-import org.jetbrains.kotlin.fir.declarations.utils.expandedConeType
-import org.jetbrains.kotlin.fir.declarations.utils.isFinal
-import org.jetbrains.kotlin.fir.declarations.utils.isInner
-import org.jetbrains.kotlin.fir.declarations.utils.isLocal
+import org.jetbrains.kotlin.fir.declarations.utils.*
 import org.jetbrains.kotlin.fir.diagnostics.ConeDiagnostic
 import org.jetbrains.kotlin.fir.diagnostics.ConeSimpleDiagnostic
 import org.jetbrains.kotlin.fir.diagnostics.ConeStubDiagnostic
@@ -74,7 +73,7 @@ fun FirFunction.constructFunctionalType(isSuspend: Boolean = false): ConeLookupT
 
 fun FirFunction.constructFunctionalTypeRef(isSuspend: Boolean = false): FirResolvedTypeRef {
     return buildResolvedTypeRef {
-        source = this@constructFunctionalTypeRef.source?.fakeElement(FirFakeSourceElementKind.ImplicitTypeRef)
+        source = this@constructFunctionalTypeRef.source?.fakeElement(KtFakeSourceElementKind.ImplicitTypeRef)
         type = constructFunctionalType(isSuspend)
     }
 }
@@ -116,7 +115,7 @@ fun createKPropertyType(
 
 fun BodyResolveComponents.buildResolvedQualifierForClass(
     regularClass: FirClassLikeSymbol<*>,
-    sourceElement: FirSourceElement? = null,
+    sourceElement: KtSourceElement? = null,
     // TODO: Clarify if we actually need type arguments for qualifier?
     typeArgumentsForQualifier: List<FirTypeProjection> = emptyList(),
     diagnostic: ConeDiagnostic? = null,
@@ -217,7 +216,7 @@ fun <T : FirResolvable> BodyResolveComponents.typeFromCallee(access: T): FirReso
     return when (val newCallee = access.calleeReference) {
         is FirErrorNamedReference ->
             buildErrorTypeRef {
-                source = access.source?.fakeElement(FirFakeSourceElementKind.ErrorTypeRef)
+                source = access.source?.fakeElement(KtFakeSourceElementKind.ErrorTypeRef)
                 diagnostic = ConeStubDiagnostic(newCallee.diagnostic)
             }
         is FirNamedReferenceWithCandidate -> {
@@ -267,11 +266,11 @@ private fun BodyResolveComponents.typeFromSymbol(symbol: FirBasedSymbol<*>, make
             if (makeNullable) {
                 returnTypeRef.withReplacedConeType(
                     returnTypeRef.type.withNullability(ConeNullability.NULLABLE, session.typeContext),
-                    FirFakeSourceElementKind.ImplicitTypeRef
+                    KtFakeSourceElementKind.ImplicitTypeRef
                 )
             } else {
                 buildResolvedTypeRef {
-                    source = returnTypeRef.source?.fakeElement(FirFakeSourceElementKind.ImplicitTypeRef)
+                    source = returnTypeRef.source?.fakeElement(KtFakeSourceElementKind.ImplicitTypeRef)
                     type = returnTypeRef.type
                     annotations += returnTypeRef.annotations
                 }
@@ -307,7 +306,7 @@ fun BodyResolveComponents.transformQualifiedAccessUsingSmartcastInfo(
     val intersectedType = ConeTypeIntersector.intersectTypes(session.inferenceComponents.ctx, allTypes)
     if (intersectedType == originalType) return qualifiedAccessExpression
     val intersectedTypeRef = buildResolvedTypeRef {
-        source = qualifiedAccessExpression.resultType.source?.fakeElement(FirFakeSourceElementKind.SmartCastedTypeRef)
+        source = qualifiedAccessExpression.resultType.source?.fakeElement(KtFakeSourceElementKind.SmartCastedTypeRef)
         type = intersectedType
         annotations += qualifiedAccessExpression.resultType.annotations
         delegatedTypeRef = qualifiedAccessExpression.resultType
@@ -322,7 +321,7 @@ fun BodyResolveComponents.transformQualifiedAccessUsingSmartcastInfo(
         val intersectedTypeWithoutNullableNothing =
             ConeTypeIntersector.intersectTypes(session.inferenceComponents.ctx, typesFromSmartcastWithoutNullableNothing)
         val intersectedTypeRefWithoutNullableNothing = buildResolvedTypeRef {
-            source = qualifiedAccessExpression.resultType.source?.fakeElement(FirFakeSourceElementKind.SmartCastedTypeRef)
+            source = qualifiedAccessExpression.resultType.source?.fakeElement(KtFakeSourceElementKind.SmartCastedTypeRef)
             type = intersectedTypeWithoutNullableNothing
             annotations += qualifiedAccessExpression.resultType.annotations
             delegatedTypeRef = qualifiedAccessExpression.resultType

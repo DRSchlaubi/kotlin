@@ -5,20 +5,15 @@
 
 package org.jetbrains.kotlin.fir.analysis.diagnostics
 
-import com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.descriptors.ClassKind
-import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.diagnostics.WhenMissingCase
-import org.jetbrains.kotlin.diagnostics.rendering.ContextIndependentParameterRenderer
 import org.jetbrains.kotlin.diagnostics.rendering.Renderer
 import org.jetbrains.kotlin.fir.FirElement
 import org.jetbrains.kotlin.fir.FirModuleData
 import org.jetbrains.kotlin.fir.FirRenderer
-import org.jetbrains.kotlin.fir.declarations.*
+import org.jetbrains.kotlin.fir.analysis.diagnostics.KtDiagnosticRenderers.COLLECTION
 import org.jetbrains.kotlin.fir.declarations.utils.*
 import org.jetbrains.kotlin.fir.render
-import org.jetbrains.kotlin.fir.resolve.dfa.cfg.isLocalClassOrAnonymousObject
-import org.jetbrains.kotlin.fir.resolve.transformers.body.resolve.firUnsafe
 import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.fir.symbols.impl.*
@@ -26,8 +21,6 @@ import org.jetbrains.kotlin.fir.types.ConeKotlinType
 import org.jetbrains.kotlin.fir.types.render
 
 object FirDiagnosticRenderers {
-    val NULLABLE_STRING = Renderer<String?> { it ?: "null" }
-
     val SYMBOL = Renderer { symbol: FirBasedSymbol<*> ->
         when (symbol) {
             is FirClassLikeSymbol<*> -> symbol.classId.asString()
@@ -45,22 +38,12 @@ object FirDiagnosticRenderers {
         }
     }
 
-    val TO_STRING = Renderer { element: Any? ->
-        element.toString()
-    }
-
-    val EMPTY = Renderer { _: Any? -> "" }
-
     val VARIABLE_NAME = Renderer { symbol: FirVariableSymbol<*> ->
         symbol.name.asString()
     }
 
     val FIR = Renderer { element: FirElement ->
         element.render()
-    }
-
-    val VISIBILITY = Renderer { visibility: Visibility ->
-        visibility.externalDisplayName
     }
 
     val DECLARATION_NAME = Renderer { symbol: FirBasedSymbol<*> ->
@@ -129,22 +112,7 @@ object FirDiagnosticRenderers {
         }
     }
 
-    val NOT_RENDERED = Renderer<Any?> {
-        ""
-    }
-
-    val FUNCTION_PARAMETERS = Renderer { hasValueParameters: Boolean -> if (hasValueParameters) "..." else "" }
-
     val MODULE_DATA = Renderer<FirModuleData> {
         "Module ${it.name}"
-    }
-
-    @Suppress("FunctionName")
-    fun <T> COLLECTION(renderer: ContextIndependentParameterRenderer<T>): ContextIndependentParameterRenderer<Collection<T>> {
-        return Renderer { list ->
-            list.joinToString(prefix = "[", postfix = "]", separator = ", ", limit = 3, truncated = "...") {
-                renderer.render(it)
-            }
-        }
     }
 }

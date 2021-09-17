@@ -7,11 +7,11 @@ package org.jetbrains.kotlin.fir.plugin
 
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoot
 import org.jetbrains.kotlin.config.CompilerConfiguration
-import org.jetbrains.kotlin.fir.AbstractFirDiagnosticsTest
+import org.jetbrains.kotlin.fir.AbstractKtDiagnosticsTest
 import org.jetbrains.kotlin.fir.extensions.BunchOfRegisteredExtensions
 import java.io.File
 
-abstract class AbstractFirAllOpenDiagnosticTest : AbstractFirDiagnosticsTest() {
+abstract class AbstractFirAllOpenDiagnosticTest : AbstractKtDiagnosticsTest() {
     override val pluginPhasesEnabled: Boolean
         get() = true
 

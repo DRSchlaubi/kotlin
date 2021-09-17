@@ -25,7 +25,7 @@ import org.jetbrains.kotlin.analysis.api.types.KtSubstitutor
 import org.jetbrains.kotlin.analysis.api.withValidityAssertion
 import org.jetbrains.kotlin.analysis.low.level.api.fir.api.getOrBuildFir
 import org.jetbrains.kotlin.builtins.StandardNames
-import org.jetbrains.kotlin.fir.analysis.diagnostics.FirDiagnostic
+import org.jetbrains.kotlin.fir.analysis.diagnostics.KtDiagnostic
 import org.jetbrains.kotlin.fir.declarations.FirConstructor
 import org.jetbrains.kotlin.fir.expressions.*
 import org.jetbrains.kotlin.fir.realPsi
@@ -54,7 +54,7 @@ internal class KtFirCallResolver(
     override val analysisSession: KtFirAnalysisSession,
     override val token: ValidityToken,
 ) : KtCallResolver(), KtFirAnalysisSessionComponent {
-    private val diagnosticCache = mutableListOf<FirDiagnostic>()
+    private val diagnosticCache = mutableListOf<KtDiagnostic>()
     private val cache: ConcurrentHashMap<KtElement, KtCall?> = ConcurrentHashMap()
 
     override fun resolveAccessorCall(call: KtSimpleNameExpression): KtCall? = withValidityAssertion {

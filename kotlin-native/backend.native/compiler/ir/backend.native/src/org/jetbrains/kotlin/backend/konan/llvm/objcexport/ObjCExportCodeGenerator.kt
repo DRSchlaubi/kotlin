@@ -335,7 +335,7 @@ internal class ObjCExportCodeGenerator(
 
         val value = genValue(Lifetime.ARGUMENT)
 
-        return callFromBridge(conversion.owner.llvmFunction, listOf(value), resultLifetime)
+        return callFromBridge(conversion.owner.llvmDeclarations, listOf(value), resultLifetime)
     }
 
     private fun generateTypeAdaptersForKotlinTypes(spec: ObjCExportCodeSpec?): List<ObjCTypeAdapter> {
@@ -724,7 +724,7 @@ private fun ObjCExportCodeGenerator.emitBoxConverter(
     val name = "${boxClass.name}ToNSNumber"
 
     val converter = functionGenerator(kotlinToObjCFunctionType, name).generate {
-        val unboxFunction = context.getUnboxFunction(boxClass).llvmFunction
+        val unboxFunction = context.getUnboxFunction(boxClass).llvmDeclarations
         val kotlinValue = callFromBridge(
                 unboxFunction,
                 listOf(param(0)),
@@ -1233,7 +1233,7 @@ private fun ObjCExportCodeGenerator.generateKotlinToObjCBridge(
                 // for calling the completion, so in Kotlin coroutines machinery terms it suspends,
                 // which is indicated by the return value:
                 callFromBridge(
-                        context.ir.symbols.objCExportGetCoroutineSuspended.owner.llvmFunction,
+                        context.ir.symbols.objCExportGetCoroutineSuspended.owner.llvmDeclarations,
                         emptyList(),
                         Lifetime.RETURN_VALUE
                 )

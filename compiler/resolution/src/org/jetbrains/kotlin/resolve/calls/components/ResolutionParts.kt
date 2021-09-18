@@ -856,7 +856,8 @@ internal object CheckContextReceiversResolutionPart : ResolutionPart() {
                 return null
             }
         }
-        diagnosticsFromResolutionParts.add(NoContextReceiver(candidateContextReceiverParameter))
+        addDiagnostic(NoContextReceiver(candidateContextReceiverParameter))
+        // diagnosticsFromResolutionParts.add(NoContextReceiver(candidateContextReceiverParameter))
         return null
     }
 }

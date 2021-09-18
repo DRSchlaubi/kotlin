@@ -10571,6 +10571,12 @@ public class DiagnosisCompilerTestFE10TestdataTestGenerated extends AbstractDiag
                 }
 
                 @Test
+                @TestMetadata("overloading.kt")
+                public void testOverloading() throws Exception {
+                    runTest("compiler/testData/diagnostics/tests/extensions/contextReceivers/overloading.kt");
+                }
+
+                @Test
                 @TestMetadata("plusMatrix.kt")
                 public void testPlusMatrix() throws Exception {
                     runTest("compiler/testData/diagnostics/tests/extensions/contextReceivers/plusMatrix.kt");

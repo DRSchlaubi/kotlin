@@ -15836,6 +15836,12 @@ public class FirBlackBoxCodegenTestGenerated extends AbstractFirBlackBoxCodegenT
             }
 
             @Test
+            @TestMetadata("overloading.kt")
+            public void testOverloading() throws Exception {
+                runTest("compiler/testData/codegen/box/extensionFunctions/contextReceivers/overloading.kt");
+            }
+
+            @Test
             @TestMetadata("plusAssign.kt")
             public void testPlusAssign() throws Exception {
                 runTest("compiler/testData/codegen/box/extensionFunctions/contextReceivers/plusAssign.kt");

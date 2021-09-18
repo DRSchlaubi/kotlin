@@ -47,13 +47,17 @@ fun <T> SimpleConstraintSystem.isSignatureNotLessSpecific(
     specificityComparator: TypeSpecificityComparator
 ): Boolean {
     if (specific.hasExtensionReceiver != general.hasExtensionReceiver) return false
-    if (specific.contextReceiverCount != general.contextReceiverCount) return false
-    if (specific.valueParameterTypes.size != general.valueParameterTypes.size && specific.contextReceiverCount == general.contextReceiverCount) return false
+    if (specific.contextReceiverCount > general.contextReceiverCount) return false
+    if (specific.valueParameterTypes.size - specific.contextReceiverCount != general.valueParameterTypes.size - general.contextReceiverCount)
+        return false
 
     val typeParameters = general.typeParameters
     val typeSubstitutor = registerTypeVariables(typeParameters)
 
-    for ((specificType, generalType) in specific.valueParameterTypes.zip(general.valueParameterTypes)) {
+    val specificValueParamsWithoutContextReceivers = specific.valueParameterTypes.drop(specific.contextReceiverCount)
+    val generalValueParamsWithoutContextReceivers = general.valueParameterTypes.drop(general.contextReceiverCount)
+
+    for ((specificType, generalType) in specificValueParamsWithoutContextReceivers.zip(generalValueParamsWithoutContextReceivers)) {
         if (specificType == null || generalType == null) continue
 
         if (specificityComparator.isDefinitelyLessSpecific(specificType, generalType)) {

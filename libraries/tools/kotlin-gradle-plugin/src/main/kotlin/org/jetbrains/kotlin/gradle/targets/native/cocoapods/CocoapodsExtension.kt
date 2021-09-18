@@ -18,22 +18,16 @@ import org.jetbrains.kotlin.gradle.plugin.cocoapods.CocoapodsExtension.Cocoapods
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 import org.jetbrains.kotlin.gradle.plugin.mpp.Framework
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBinary
-import org.jetbrains.kotlin.gradle.plugin.mpp.TestExecutable
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 import java.io.File
 import java.net.URI
 
 open class CocoapodsExtension(private val project: Project) {
+    /**
+     * Configure version of the pod
+     */
     @get:Input
-    val version: String
-        get() {
-            require(project.version != Project.DEFAULT_VERSION) { """
-                Cocoapods Integration requires version of this project to be specified.
-                Please, add line 'version = "<version>"' to project's build file.
-                For more details, please, see https://guides.cocoapods.org/syntax/podspec.html#version 
-            """.trimIndent()
-            }
-            return project.version.toString()
-        }
+    var version: String? = null
 
     /**
      * Configure authors of the pod built from this project.
@@ -70,6 +64,13 @@ open class CocoapodsExtension(private val project: Project) {
     internal var useLibraries: Boolean = false
 
     /**
+     * Configure name of the pod built from this project.
+     */
+    @Optional
+    @Input
+    var name: String = project.name.asValidFrameworkName()
+
+    /**
      * Configure license of the pod built from this project.
      */
     @Optional
@@ -89,6 +90,13 @@ open class CocoapodsExtension(private val project: Project) {
     @Optional
     @Input
     var homepage: String? = null
+
+    /**
+     * Configure location of the pod built from this project.
+     */
+    @Optional
+    @Input
+    var source: String? = null
 
     /**
      * Configure framework of the pod built from this project.
@@ -138,6 +146,18 @@ open class CocoapodsExtension(private val project: Project) {
         "Debug" to NativeBuildType.DEBUG,
         "Release" to NativeBuildType.RELEASE
     )
+
+    /**
+     * Configure output directory for pod publishing
+     */
+    @Input
+    var publishDir: File = CocoapodsBuildDirs(project).publish
+
+    /**
+     * Configure custom podspec
+     */
+    @Input
+    var customSpec: String = ""
 
     @get:Nested
     internal val specRepos = SpecRepos()

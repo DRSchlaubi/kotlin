@@ -20,7 +20,6 @@ import org.jetbrains.kotlin.gradle.plugin.cocoapods.KotlinCocoapodsPlugin
 import org.jetbrains.kotlin.gradle.plugin.cocoapods.KotlinCocoapodsPlugin.Companion.COCOAPODS_EXTENSION_NAME
 import org.jetbrains.kotlin.gradle.plugin.cocoapods.KotlinCocoapodsPlugin.Companion.GENERATE_WRAPPER_PROPERTY
 import org.jetbrains.kotlin.gradle.plugin.cocoapods.KotlinCocoapodsPlugin.Companion.SYNC_TASK_NAME
-import org.jetbrains.kotlin.gradle.plugin.cocoapods.asValidFrameworkName
 import org.jetbrains.kotlin.gradle.plugin.cocoapods.cocoapodsBuildDirs
 import java.io.File
 
@@ -31,11 +30,14 @@ import java.io.File
 open class PodspecTask : DefaultTask() {
 
     @get:Input
-    internal val specName = project.name.asValidFrameworkName()
+    internal lateinit var specName: Provider<String>
+
+    @get:Internal
+    internal lateinit var outputDir: Provider<File>
 
     @get:OutputFile
-    internal val outputFileProvider: Provider<File>
-        get() = project.provider { project.file("$specName.podspec") }
+    internal val outputFile: File
+        get() = outputDir.get().resolve("${specName.get()}.podspec")
 
     @get:Input
     internal lateinit var needPodspec: Provider<Boolean>
@@ -45,6 +47,16 @@ open class PodspecTask : DefaultTask() {
 
     @get:Input
     internal lateinit var version: Provider<String>
+
+    @get:Input
+    internal lateinit var publishing: Provider<Boolean>
+
+    @get:Input
+    internal lateinit var customSpec: Provider<String>
+
+    @get:Input
+    @get:Optional
+    internal val source = project.objects.property(String::class.java)
 
     @get:Input
     @get:Optional
@@ -84,7 +96,16 @@ open class PodspecTask : DefaultTask() {
     @TaskAction
     fun generate() {
 
-        val frameworkDir = project.cocoapodsBuildDirs.framework.relativeTo(outputFileProvider.get().parentFile).path
+        check(version.get() != Project.DEFAULT_VERSION) {
+            """
+                Cocoapods Integration requires pod version to be specified.
+                Please add 'version = "<version>"' to the project build file to specify version for the entire project.
+                Alternatively add the same to the cocoapods block to set version for the pod only.
+                Pod version format has to conform podspec syntax requirements: https://guides.cocoapods.org/syntax/podspec.html#version 
+            """.trimIndent()
+        }
+
+        val frameworkDir = project.cocoapodsBuildDirs.framework.relativeTo(outputFile.parentFile).path
         val dependencies = pods.get().map { pod ->
             val versionSuffix = if (pod.version != null) ", '${pod.version}'" else ""
             "|    spec.dependency '${pod.name}'$versionSuffix"
@@ -109,34 +130,22 @@ open class PodspecTask : DefaultTask() {
             }
         }
 
-        with(outputFileProvider.get()) {
-            writeText(
-                """
-                |Pod::Spec.new do |spec|
-                |    spec.name                     = '$specName'
-                |    spec.version                  = '${version.get()}'
-                |    spec.homepage                 = '${homepage.getOrEmpty()}'
-                |    spec.source                   = { :git => "Not Published", :tag => "Cocoapods/#{spec.name}/#{spec.version}" }
-                |    spec.authors                  = '${authors.getOrEmpty()}'
-                |    spec.license                  = '${license.getOrEmpty()}'
-                |    spec.summary                  = '${summary.getOrEmpty()}'
-                |
-                |    spec.vendored_frameworks      = "$frameworkDir/${frameworkName.get()}.framework"
-                |    spec.libraries                = "c++"
-                |    spec.module_name              = "#{spec.name}_umbrella"
-                |
-                $deploymentTargets
-                |
-                $dependencies
-                |
+        val frameworkPath =
+            if (publishing.get()) "${frameworkName.get()}.xcframework" else "$frameworkDir/${frameworkName.get()}.framework"
+
+        val xcConfig = if (publishing.get()) "" else
+            """
                 |    spec.pod_target_xcconfig = {
                 |        'KOTLIN_PROJECT_PATH' => '${project.path}',
-                |        'PRODUCT_MODULE_NAME' => '$specName',
+                |        'PRODUCT_MODULE_NAME' => '${frameworkName.get()}',
                 |    }
-                |
+            """.trimMargin()
+
+        val scriptPhase = if (publishing.get()) "" else
+            """
                 |    spec.script_phases = [
                 |        {
-                |            :name => 'Build $specName',
+                |            :name => 'Build ${specName.get()}',
                 |            :execution_position => :before_compile,
                 |            :shell_path => '/bin/sh',
                 |            :script => <<-SCRIPT
@@ -153,17 +162,44 @@ open class PodspecTask : DefaultTask() {
                 |            SCRIPT
                 |        }
                 |    ]
+        """.trimMargin()
+
+        with(outputFile) {
+            writeText(
+                """
+                |Pod::Spec.new do |spec|
+                |    spec.name                     = '${specName.get()}'
+                |    spec.version                  = '${version.get()}'
+                |    spec.homepage                 = '${homepage.getOrEmpty()}'
+                |    spec.source                   = ${source.getOrElse("{ :http=> ''}")}
+                |    spec.authors                  = '${authors.getOrEmpty()}'
+                |    spec.license                  = '${license.getOrEmpty()}'
+                |    spec.summary                  = '${summary.getOrEmpty()}'
+                |
+                |    spec.vendored_frameworks      = "$frameworkPath"
+                |    spec.libraries                = "c++"
+                |
+                $deploymentTargets
+                |
+                $dependencies
+                |
+                |$xcConfig
+                |
+                |$scriptPhase
+                |
+                |    ${customSpec.getOrEmpty()}
+                |
                 |end
         """.trimMargin()
             )
 
-            if (hasPodfileOwnOrParent(project)) {
+            if (hasPodfileOwnOrParent(project) && publishing.get().not()) {
                 logger.quiet(
                     """
                     Generated a podspec file at: ${absolutePath}.
                     To include it in your Xcode project, check that the following dependency snippet exists in your Podfile:
 
-                    pod '$specName', :path => '${parentFile.absolutePath}'
+                    pod '${specName.get()}', :path => '${parentFile.absolutePath}'
 
             """.trimIndent()
                 )
@@ -172,7 +208,7 @@ open class PodspecTask : DefaultTask() {
         }
     }
 
-    fun Provider<String>.getOrEmpty() = getOrElse("")
+    fun Provider<String>.getOrEmpty(): String = getOrElse("")
 
     companion object {
         private val KotlinMultiplatformExtension?.cocoapodsExtensionOrNull: CocoapodsExtension?

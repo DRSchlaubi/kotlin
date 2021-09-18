@@ -9,6 +9,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileTree
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.*
 import org.jetbrains.kotlin.gradle.plugin.cocoapods.asValidFrameworkName
 import org.jetbrains.kotlin.gradle.plugin.mpp.Framework
@@ -110,7 +111,7 @@ private fun Project.registerAssembleXCFrameworkTask(
         "XCFramework"
     )
     return registerTask(taskName) { task ->
-        task.baseName = xcFrameworkName
+        task.baseName = provider { xcFrameworkName }
         task.buildType = buildType
     }
 }
@@ -151,10 +152,11 @@ abstract class XCFrameworkTask : DefaultTask() {
      * A base name for the XCFramework.
      */
     @Input
-    var baseName: String = project.name
+    var baseName: Provider<String> = project.provider { project.name }
 
-    private val xcFrameworkName: String
-        get() = baseName.asValidFrameworkName()
+    @get:Internal
+    internal val xcFrameworkName: Provider<String>
+        get() = baseName.map { it.asValidFrameworkName() }
 
     /**
      * A build type of the XCFramework.
@@ -189,11 +191,11 @@ abstract class XCFrameworkTask : DefaultTask() {
      */
     @get:Internal  // We take it into account as an input in the buildType and baseName properties.
     protected val fatFrameworksDir: File
-        get() = project.fatFrameworkDir(xcFrameworkName, buildType)
+        get() = project.fatFrameworkDir(xcFrameworkName.get(), buildType)
 
     @get:OutputDirectory
     protected val outputXCFrameworkFile: File
-        get() = outputDir.resolve(buildType.getName()).resolve("$xcFrameworkName.xcframework")
+        get() = outputDir.resolve(buildType.getName()).resolve("${xcFrameworkName.get()}.xcframework")
 
     /**
      * Adds the specified frameworks in this XCFramework.
@@ -214,10 +216,13 @@ abstract class XCFrameworkTask : DefaultTask() {
             val group = frameworks.filter { it.konanTarget in appleTarget.targets }
             when {
                 group.size == 1 -> {
-                    group.first().outputFile
+                    XCFrameworkFile(group.first().outputFile, group.first().isStatic)
                 }
                 group.size > 1 -> {
-                    fatFrameworksDir.resolve(appleTarget.targetName).resolve("$xcFrameworkName.framework")
+                    XCFrameworkFile(
+                        fatFrameworksDir.resolve(appleTarget.targetName).resolve("${xcFrameworkName.get()}.framework"),
+                        group.all { it.isStatic }
+                    )
                 }
                 else -> null
             }
@@ -225,16 +230,18 @@ abstract class XCFrameworkTask : DefaultTask() {
         createXCFramework(frameworksForXCFramework, outputXCFrameworkFile, buildType)
     }
 
-    private fun createXCFramework(frameworks: List<File>, output: File, buildType: NativeBuildType) {
+    private data class XCFrameworkFile (val file: File, val isStatic: Boolean)
+
+    private fun createXCFramework(frameworkFiles: List<XCFrameworkFile>, output: File, buildType: NativeBuildType) {
         if (output.exists()) output.deleteRecursively()
 
         val cmdArgs = mutableListOf("xcodebuild", "-create-xcframework")
-        frameworks.forEach { framework ->
+        frameworkFiles.forEach { frameworkFile ->
             cmdArgs.add("-framework")
-            cmdArgs.add(framework.path)
-            if (buildType == NativeBuildType.DEBUG) {
+            cmdArgs.add(frameworkFile.file.path)
+            if (buildType == NativeBuildType.DEBUG && frameworkFile.isStatic.not()) {
                 cmdArgs.add("-debug-symbols")
-                cmdArgs.add(framework.path + ".dSYM")
+                cmdArgs.add(frameworkFile.file.path + ".dSYM")
             }
         }
         cmdArgs.add("-output")

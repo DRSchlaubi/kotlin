@@ -17,6 +17,7 @@ import org.jetbrains.kotlin.android.synthetic.test.AbstractAndroidIrBoxTest
 import org.jetbrains.kotlin.android.synthetic.test.AbstractAndroidSyntheticPropertyDescriptorTest
 import org.jetbrains.kotlin.fir.plugin.AbstractFirAllOpenDiagnosticTest
 import org.jetbrains.kotlin.generators.TestGroup
+import org.jetbrains.kotlin.generators.generateTestGroupSuiteWithJUnit5
 import org.jetbrains.kotlin.generators.impl.generateTestGroupSuite
 import org.jetbrains.kotlin.incremental.*
 import org.jetbrains.kotlin.jvm.abi.*
@@ -286,12 +287,6 @@ fun main(args: Array<String>) {
             }
         }
 
-        testGroup("plugins/fir/fir-plugin-prototype/tests", "plugins/fir/fir-plugin-prototype/testData") {
-            testClass<AbstractFirAllOpenDiagnosticTest> {
-                model("")
-            }
-        }
-
         testGroup("plugins/lombok/lombok-compiler-plugin/tests", "plugins/lombok/lombok-compiler-plugin/testData") {
             testClass<AbstractLombokCompileTest> {
                 model("compile")
@@ -371,5 +366,13 @@ fun main(args: Array<String>) {
         }
     }
 */
+    }
+
+    generateTestGroupSuiteWithJUnit5 {
+        testGroup("plugins/fir/fir-plugin-prototype/tests", "plugins/fir/fir-plugin-prototype/testData") {
+            testClass<AbstractFirAllOpenDiagnosticTest> {
+                model("")
+            }
+        }
     }
 }

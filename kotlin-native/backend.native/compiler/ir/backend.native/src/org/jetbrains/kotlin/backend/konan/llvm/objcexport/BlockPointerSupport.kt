@@ -5,7 +5,6 @@
 
 package org.jetbrains.kotlin.backend.konan.llvm.objcexport
 
-import kotlinx.cinterop.CPointer
 import llvm.*
 import org.jetbrains.kotlin.backend.common.ir.simpleFunctions
 import org.jetbrains.kotlin.backend.konan.llvm.*
@@ -339,10 +338,10 @@ internal class BlockGenerator(private val codegen: CodeGenerator) {
 private val ObjCExportCodeGeneratorBase.retainBlock: FunctionLlvmDeclarations
     get() {
         val functionProto = LlvmFunctionProto(
-                "objc_retainBlock",
-                AttributedLlvmType(int8TypePtr),
-                listOf(AttributedLlvmType(int8TypePtr)),
-                origin = CurrentKlibModuleOrigin
+            "objc_retainBlock",
+            LlvmParameter(int8TypePtr),
+            listOf(LlvmParameter(int8TypePtr)),
+            origin = CurrentKlibModuleOrigin
         )
         return FunctionLlvmDeclarations(context.llvm.externalFunction(functionProto), functionProto)
     }

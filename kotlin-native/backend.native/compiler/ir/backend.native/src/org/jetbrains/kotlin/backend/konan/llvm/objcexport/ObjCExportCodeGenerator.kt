@@ -117,8 +117,8 @@ internal open class ObjCExportCodeGeneratorBase(codegen: CodeGenerator) : ObjCCo
     private val objcTerminate: LLVMValueRef by lazy {
         context.llvm.externalFunction(LlvmFunctionProto(
                 "objc_terminate",
-                AttributedLlvmType(voidType),
-                functionAttributes = listOf(LlvmAttribute.NoUnwind),
+                LlvmParameter(voidType),
+                functionAttributes = listOf(LlvmFunctionAttribute.NoUnwind),
                 origin = CurrentKlibModuleOrigin
         ))
     }
@@ -693,8 +693,8 @@ private val ObjCExportCodeGenerator.kotlinToObjCFunctionType: LLVMTypeRef
     get() = functionType(int8TypePtr, false, codegen.kObjHeaderPtr)
 
 // TODO: Ugly and duplicates getter above. Maybe introduce AttributedFunctionType(AttributedLlvmType, List<AttributedLlvmType>)?
-private val ObjCExportCodeGenerator.kotlinToObjCFunctionAttributedType: Pair<AttributedLlvmType, List<AttributedLlvmType>>
-    get() = AttributedLlvmType(int8TypePtr) to listOf(AttributedLlvmType(codegen.kObjHeaderPtr))
+private val ObjCExportCodeGenerator.kotlinToObjCFunctionAttributedType: Pair<LlvmParameter, List<LlvmParameter>>
+    get() = LlvmParameter(int8TypePtr) to listOf(LlvmParameter(codegen.kObjHeaderPtr))
 
 private val ObjCExportCodeGeneratorBase.objCToKotlinFunctionType: LLVMTypeRef
     get() = functionType(codegen.kObjHeaderPtr, false, int8TypePtr, codegen.kObjHeaderPtrPtr)

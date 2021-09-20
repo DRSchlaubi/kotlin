@@ -96,8 +96,8 @@ private fun addDeclarationAttributesAtIndex(context: LLVMContextRef, function: L
 }
 
 class VirtualFunctionProto(
-        private val returnType: AttributedLlvmType,
-        private val parameterTypes: List<AttributedLlvmType> = emptyList(),
+        private val returnType: LlvmParameter,
+        private val parameterTypes: List<LlvmParameter> = emptyList(),
         private val isVararg: Boolean
 ) : LlvmCallSiteAttributeProvider {
 
@@ -120,9 +120,9 @@ class VirtualFunctionProto(
 
 class LlvmFunctionProto(
         val name: String,
-        val returnType: AttributedLlvmType,
-        val parameterTypes: List<AttributedLlvmType> = emptyList(),
-        val functionAttributes: List<LlvmAttribute> = emptyList(),
+        val returnType: LlvmParameter,
+        val parameterTypes: List<LlvmParameter> = emptyList(),
+        val functionAttributes: List<LlvmFunctionAttribute> = emptyList(),
         val origin: CompiledKlibModuleOrigin,
         val isVararg: Boolean = false,
         val independent: Boolean = false,

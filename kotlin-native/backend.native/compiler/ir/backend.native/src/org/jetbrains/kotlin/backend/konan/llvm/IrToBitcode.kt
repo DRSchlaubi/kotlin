@@ -1643,10 +1643,10 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
             // e.g. ObjCObject, ObjCObjectBase etc.
             if (dstClass.isObjCMetaClass()) {
                 val isClassProto = LlvmFunctionProto(
-                        "object_isClass",
-                        AttributedLlvmType(int8Type),
-                        listOf(AttributedLlvmType(int8TypePtr)),
-                        origin = context.standardLlvmSymbolsOrigin
+                    "object_isClass",
+                    LlvmParameter(int8Type),
+                    listOf(LlvmParameter(int8TypePtr)),
+                    origin = context.standardLlvmSymbolsOrigin
                 )
                 val isClass = context.llvm.externalFunction(isClassProto)
                 call(FunctionLlvmDeclarations(isClass, isClassProto), listOf(objCObject)).let {
@@ -2393,10 +2393,10 @@ internal class CodeGeneratorVisitor(val context: Context, val lifetimes: Map<IrE
         val annotation = irClass.annotations.findAnnotation(externalObjCClassFqName)!!
         val protocolGetterName = annotation.getAnnotationStringValue("protocolGetter")
         val protocolGetterProto = LlvmFunctionProto(
-                protocolGetterName,
-                AttributedLlvmType(int8TypePtr),
-                origin = irClass.llvmSymbolOrigin,
-                independent = true // Protocol is header-only declaration.
+            protocolGetterName,
+            LlvmParameter(int8TypePtr),
+            origin = irClass.llvmSymbolOrigin,
+            independent = true // Protocol is header-only declaration.
         )
         val protocolGetter = context.llvm.externalFunction(protocolGetterProto)
 

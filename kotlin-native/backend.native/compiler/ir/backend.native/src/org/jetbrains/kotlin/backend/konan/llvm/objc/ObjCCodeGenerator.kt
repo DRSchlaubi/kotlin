@@ -24,8 +24,8 @@ internal open class ObjCCodeGenerator(val codegen: CodeGenerator) {
     private val objcMsgSend = constPointer(
             context.llvm.externalFunction(LlvmFunctionProto(
                     "objc_msgSend",
-                    AttributedLlvmType(int8TypePtr),
-                    listOf(AttributedLlvmType(int8TypePtr), AttributedLlvmType(int8TypePtr)),
+                    LlvmParameter(int8TypePtr),
+                    listOf(LlvmParameter(int8TypePtr), LlvmParameter(int8TypePtr)),
                     isVararg = true,
                     origin = context.stdlibModule.llvmSymbolOrigin
             ))
@@ -34,8 +34,8 @@ internal open class ObjCCodeGenerator(val codegen: CodeGenerator) {
     val objcRelease = run {
         val proto = LlvmFunctionProto(
                 "objc_release",
-                AttributedLlvmType(voidType),
-                listOf(AttributedLlvmType(int8TypePtr)),
+                LlvmParameter(voidType),
+                listOf(LlvmParameter(int8TypePtr)),
                 origin = context.stdlibModule.llvmSymbolOrigin
         )
         FunctionLlvmDeclarations(context.llvm.externalFunction(proto), proto)
@@ -43,21 +43,21 @@ internal open class ObjCCodeGenerator(val codegen: CodeGenerator) {
 
     val objcAlloc = context.llvm.externalFunction(LlvmFunctionProto(
             "objc_alloc",
-            AttributedLlvmType(int8TypePtr), listOf(AttributedLlvmType(int8TypePtr)),
+            LlvmParameter(int8TypePtr), listOf(LlvmParameter(int8TypePtr)),
             origin = context.stdlibModule.llvmSymbolOrigin
     ))
 
     val objcAutorelease = context.llvm.externalFunction(LlvmFunctionProto(
             "llvm.objc.autorelease",
-            AttributedLlvmType(int8TypePtr), listOf(AttributedLlvmType(int8TypePtr)),
-            listOf(LlvmAttribute.NoUnwind),
+            LlvmParameter(int8TypePtr), listOf(LlvmParameter(int8TypePtr)),
+            listOf(LlvmFunctionAttribute.NoUnwind),
             origin = context.stdlibModule.llvmSymbolOrigin
     ))
 
     val objcAutoreleaseReturnValue = context.llvm.externalFunction(LlvmFunctionProto(
             "llvm.objc.autoreleaseReturnValue",
-            AttributedLlvmType(int8TypePtr), listOf(AttributedLlvmType(int8TypePtr)),
-            listOf(LlvmAttribute.NoUnwind),
+            LlvmParameter(int8TypePtr), listOf(LlvmParameter(int8TypePtr)),
+            listOf(LlvmFunctionAttribute.NoUnwind),
             origin = context.stdlibModule.llvmSymbolOrigin
     ))
 

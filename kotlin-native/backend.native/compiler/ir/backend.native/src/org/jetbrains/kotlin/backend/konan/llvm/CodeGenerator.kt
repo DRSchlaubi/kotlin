@@ -1333,8 +1333,8 @@ internal abstract class FunctionGenerationContext(
 
                 val getClass = context.llvm.externalFunction(LlvmFunctionProto(
                         "object_getClass",
-                        AttributedLlvmType(int8TypePtr),
-                        listOf(AttributedLlvmType(int8TypePtr)),
+                        LlvmParameter(int8TypePtr),
+                        listOf(LlvmParameter(int8TypePtr)),
                         origin = context.standardLlvmSymbolsOrigin
                 ))
                 call(getClass, listOf(objCClass), exceptionHandler = exceptionHandler)

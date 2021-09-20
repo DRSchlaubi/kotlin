@@ -451,8 +451,8 @@ internal class IntrinsicGenerator(private val environment: IntrinsicGeneratorEnv
     private fun FunctionGenerationContext.emitObjCGetMessenger(args: List<LLVMValueRef>, isStret: Boolean): LLVMValueRef {
         val messengerNameSuffix = if (isStret) "_stret" else ""
 
-        val functionReturnType = AttributedLlvmType(int8TypePtr)
-        val functionParameterTypes = listOf(AttributedLlvmType(int8TypePtr), AttributedLlvmType(int8TypePtr))
+        val functionReturnType = LlvmParameter(int8TypePtr)
+        val functionParameterTypes = listOf(LlvmParameter(int8TypePtr), LlvmParameter(int8TypePtr))
 
         val libobjc = context.standardLlvmSymbolsOrigin
         val normalMessenger = context.llvm.externalFunction(LlvmFunctionProto(

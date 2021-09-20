@@ -43,23 +43,23 @@ private class CallsChecker(val context: Context, goodFunctions: List<String>) {
 
     val getMethodImpl = context.llvm.externalFunction(LlvmFunctionProto(
         "class_getMethodImplementation",
-        AttributedLlvmType(pointerType(functionType(voidType, false))),
-        listOf(AttributedLlvmType(int8TypePtr), AttributedLlvmType(int8TypePtr)),
+        LlvmParameter(pointerType(functionType(voidType, false))),
+        listOf(LlvmParameter(int8TypePtr), LlvmParameter(int8TypePtr)),
         origin = context.stdlibModule.llvmSymbolOrigin)
     )
 
     val getClass = context.llvm.externalFunction(LlvmFunctionProto(
-            "object_getClass",
-            AttributedLlvmType(int8TypePtr),
-            listOf(AttributedLlvmType(int8TypePtr)),
-            origin = context.stdlibModule.llvmSymbolOrigin)
+        "object_getClass",
+        LlvmParameter(int8TypePtr),
+        listOf(LlvmParameter(int8TypePtr)),
+        origin = context.stdlibModule.llvmSymbolOrigin)
     )
 
     val getSuperClass = context.llvm.externalFunction(LlvmFunctionProto(
-            "class_getSuperclass",
-            AttributedLlvmType(int8TypePtr),
-            listOf(AttributedLlvmType(int8TypePtr)),
-            origin = context.stdlibModule.llvmSymbolOrigin)
+        "class_getSuperclass",
+        LlvmParameter(int8TypePtr),
+        listOf(LlvmParameter(int8TypePtr)),
+        origin = context.stdlibModule.llvmSymbolOrigin)
     )
 
     val checkerFunction = moduleFunction("Kotlin_mm_checkStateAtExternalFunctionCall")

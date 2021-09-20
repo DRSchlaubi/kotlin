@@ -535,31 +535,31 @@ internal class Llvm(val context: Context, val llvmModule: LLVMModuleRef) {
 
     val cxxStdTerminate = externalFunction(LlvmFunctionProto(
             "_ZSt9terminatev", // mangled C++ 'std::terminate'
-            returnType = AttributedLlvmType(voidType),
-            functionAttributes = listOf(LlvmAttribute.NoUnwind),
+            returnType = LlvmParameter(voidType),
+            functionAttributes = listOf(LlvmFunctionAttribute.NoUnwind),
             origin = context.standardLlvmSymbolsOrigin
     ))
 
     val gxxPersonalityFunction = externalFunction(LlvmFunctionProto(
             personalityFunctionName,
-            returnType = AttributedLlvmType(int32Type),
-            functionAttributes = listOf(LlvmAttribute.NoUnwind),
+            returnType = LlvmParameter(int32Type),
+            functionAttributes = listOf(LlvmFunctionAttribute.NoUnwind),
             isVararg = true,
             origin = context.standardLlvmSymbolsOrigin
     ))
 
     val cxaBeginCatchFunction = externalFunction(LlvmFunctionProto(
             "__cxa_begin_catch",
-            returnType = AttributedLlvmType(int8TypePtr),
-            functionAttributes = listOf(LlvmAttribute.NoUnwind),
-            parameterTypes = listOf(AttributedLlvmType(int8TypePtr)),
+            returnType = LlvmParameter(int8TypePtr),
+            functionAttributes = listOf(LlvmFunctionAttribute.NoUnwind),
+            parameterTypes = listOf(LlvmParameter(int8TypePtr)),
             origin = context.standardLlvmSymbolsOrigin
     ))
 
     val cxaEndCatchFunction = externalFunction(LlvmFunctionProto(
             "__cxa_end_catch",
-            returnType = AttributedLlvmType(voidType),
-            functionAttributes = listOf(LlvmAttribute.NoUnwind),
+            returnType = LlvmParameter(voidType),
+            functionAttributes = listOf(LlvmFunctionAttribute.NoUnwind),
             origin = context.standardLlvmSymbolsOrigin
     ))
 

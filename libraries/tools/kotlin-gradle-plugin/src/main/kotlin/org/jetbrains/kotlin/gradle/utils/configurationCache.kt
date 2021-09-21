@@ -23,3 +23,10 @@ internal fun Project.getSystemProperty(key: String): String? {
         System.getProperty(key)
     }
 }
+
+internal class LazyWrapper<T>(initializer: () -> T) {
+    val value by lazy(initializer)
+}
+
+internal fun unavailableValueError(propertyName: String): Nothing =
+    error("$propertyName should be available at configuration time but unavailable on configuration cache reuse")

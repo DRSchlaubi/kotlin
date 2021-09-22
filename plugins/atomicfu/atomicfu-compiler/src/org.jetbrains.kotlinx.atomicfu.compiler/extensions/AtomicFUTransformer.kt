@@ -20,9 +20,10 @@ import org.jetbrains.kotlin.ir.visitors.IrElementTransformerVoid
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 import org.jetbrains.kotlin.name.*
+import org.jetbrains.kotlin.ir.expressions.IrTypeOperator.*
 
 private const val KOTLIN = "kotlin"
-private const val AFU_PKG = "kotlinx/atomicfu"
+private const val AFU_PKG = "kotlinx.atomicfu"
 private const val LOCKS = "locks"
 private const val ATOMIC_CONSTRUCTOR = "atomic"
 private const val ATOMICFU_VALUE_TYPE = """Atomic(Int|Long|Boolean|Ref)"""
@@ -36,16 +37,18 @@ private const val GET = "get"
 private const val SET = "set"
 private const val ATOMICFU_INLINE_FUNCTION = """atomicfu_(loop|update|getAndUpdate|updateAndGet)"""
 
-private fun String.prettyStr() = replace('/', '.')
+private val ATOMICFU_VALUE_TYPE_REGEX = ATOMICFU_VALUE_TYPE.toRegex()
+private val ATOMIC_ARRAY_TYPE_REGEX = ATOMIC_ARRAY_TYPE.toRegex()
+private val REENTRANT_LOCK_TYPE_REGEX = REENTRANT_LOCK_TYPE.toRegex()
 
-class AtomicFUTransformer(override val context: IrPluginContext) : IrElementTransformerVoid(), TransformerHelpers {
+class AtomicFUTransformer(val context: IrPluginContext) : IrElementTransformerVoid() {
 
     private val irBuiltIns = context.irBuiltIns
 
     private val AFU_CLASSES: Map<String, IrType> = mapOf(
         "AtomicInt" to irBuiltIns.intType,
         "AtomicLong" to irBuiltIns.longType,
-        "AtomicRef" to irBuiltIns.anyType,
+        "AtomicRef" to irBuiltIns.anyNType,
         "AtomicBoolean" to irBuiltIns.booleanType
     )
 
@@ -75,11 +78,11 @@ class AtomicFUTransformer(override val context: IrPluginContext) : IrElementTran
     }
 
     override fun visitProperty(declaration: IrProperty): IrStatement {
-        if (declaration.backingField != null) {
-            val backingField = declaration.backingField!!
-            if (backingField.initializer != null) {
-                val initializer = backingField.initializer!!.expression.eraseAtomicConstructor(backingField)
-                declaration.backingField!!.initializer = context.irFactory.createExpressionBody(initializer)
+        declaration.backingField?.let { backingField ->
+            backingField.initializer?.let { initializer ->
+                initializer.expression.eraseAtomicConstructor(backingField)?.let { newInitializer ->
+                    declaration.backingField!!.initializer = context.irFactory.createExpressionBody(newInitializer)
+                }
             }
         }
         return super.visitProperty(declaration)
@@ -109,7 +112,7 @@ class AtomicFUTransformer(override val context: IrPluginContext) : IrElementTran
             type.isAtomicValueType() -> getPureTypeValue().transformAtomicFunctionCall(parentDeclaration, lambda)
             type.isAtomicArrayType() -> buildPureTypeArrayConstructor()
             type.isReentrantLockType() -> buildConstNull()
-            else -> this
+            else -> null
         }
 
     private fun IrDeclaration.transformInlineAtomicExtension(): IrDeclaration? {
@@ -137,37 +140,38 @@ class AtomicFUTransformer(override val context: IrPluginContext) : IrElementTran
     }
 
     private fun IrExpression.getPureTypeValue(): IrExpression {
-        require(this is IrCall && isAtomicFactory()) { "Illegal initializer for the atomic property $this" }
+        require(this is IrCall && isAtomicFactory()) { "Illegal initializer for the atomic property ${this.render()}" }
         return getValueArgument(0)!!
     }
 
     private fun IrExpression.buildPureTypeArrayConstructor() =
         when (this) {
             is IrConstructorCall -> {
-                require(isAtomicArrayConstructor()) { "Unsupported atomic array constructor $this" }
+                require(isAtomicArrayConstructor()) { "Unsupported atomic array constructor ${this.render()}" }
                 val arrayConstructorSymbol = type.getArrayConstructorSymbol { it.owner.valueParameters.size == 1 }
                 val size = getValueArgument(0)
                 IrConstructorCallImpl(
-                    UNDEFINED_OFFSET, UNDEFINED_OFFSET,
-                    irBuiltIns.unitType, arrayConstructorSymbol,
-                    0, 0, 1
+                    startOffset, endOffset,
+                    arrayConstructorSymbol.owner.returnType, arrayConstructorSymbol,
+                    arrayConstructorSymbol.owner.typeParameters.size, 0, 1
                 ).apply {
                     putValueArgument(0, size)
                 }
             }
             is IrCall -> {
-                require(isAtomicArrayFactory()) { "Unsupported atomic array factory function $this" }
+                require(isAtomicArrayFactory()) { "Unsupported atomic array factory function ${this.render()}" }
                 val arrayFactorySymbol = referencePackageFunction("kotlin", "arrayOfNulls")
                 val arrayElementType = getTypeArgument(0)!!
                 val size = getValueArgument(0)
                 buildCall(
+                    startOffset, endOffset,
                     target = arrayFactorySymbol,
                     type = type,
                     typeArguments = listOf(arrayElementType),
                     valueArguments = listOf(size)
                 )
             }
-            else -> error("Illegal type of atomic array initializer")
+            else -> error("Illegal type of atomic array initializer ${this.render()}")
         }
 
     private fun IrCall.inlineAtomicFunction(atomicType: IrType, accessors: List<IrExpression>): IrCall {
@@ -194,11 +198,11 @@ class AtomicFUTransformer(override val context: IrPluginContext) : IrElementTran
 
     private fun IrExpression.transformAtomicFunctionCall(parentDeclaration: IrDeclaration, lambda: IrFunction? = null): IrExpression {
         // erase unchecked cast to the Atomic* type
-        if (this is IrTypeOperatorCall && operator == IrTypeOperator.CAST && typeOperand.isAtomicValueType()) {
+        if (this is IrTypeOperatorCall && (operator == CAST || operator == IMPLICIT_CAST) && typeOperand.isAtomicValueType()) {
             return argument
         }
         if (isAtomicValueInitializer()) {
-            return eraseAtomicConstructor(parentDeclaration, lambda)
+            return eraseAtomicConstructor(parentDeclaration, lambda)!!
         }
         when (this) {
             is IrTypeOperatorCall -> {
@@ -230,17 +234,7 @@ class AtomicFUTransformer(override val context: IrPluginContext) : IrElementTran
             is IrSetField -> {
                 return apply { value = value.transformAtomicFunctionCall(parentDeclaration, lambda) }
             }
-            is IrIfThenElseImpl -> {
-                return apply {
-                    branches.forEachIndexed { i, branch ->
-                        branches[i] = branch.apply {
-                            condition = condition.transformAtomicFunctionCall(parentDeclaration, lambda)
-                            result = result.transformAtomicFunctionCall(parentDeclaration, lambda)
-                        }
-                    }
-                }
-            }
-            is IrWhenImpl -> {
+            is IrWhen -> {
                 return apply {
                     branches.forEachIndexed { i, branch ->
                         branches[i] = branch.apply {
@@ -273,7 +267,7 @@ class AtomicFUTransformer(override val context: IrPluginContext) : IrElementTran
                     val index = (symbol.owner as IrValueParameter).index
                     if (index >= 0) { // index == -1 for `this` parameter
                         val transformedValueParameter = (parentDeclaration as IrFunction).valueParameters[index]
-                        return buildGetValue(transformedValueParameter.symbol)
+                        return buildGetValue(startOffset, endOffset, transformedValueParameter.symbol)
                     }
                 }
             }
@@ -296,8 +290,8 @@ class AtomicFUTransformer(override val context: IrPluginContext) : IrElementTran
                             transformAtomicfuLoopBody(parentDeclaration)
                         }
                     }
-                    // 2. Atomic extension receiver `this`, the reciver of the parent function.
-                    // Parent function is the inline Atomic* extension function already transformed with `transformAtomicInlineDeclaration`
+                    // 2. Atomic extension receiver `this`, the receiver of the parent function.
+                    // Parent function is the inline Atomic* extension function already transformed with `transformInlineAtomicExtension`
                     // inline fun foo(getter: () -> T, setter: (T) -> Unit) { incrementAndGet() } ->
                     // inline fun foo(getter: () -> T, setter: (T) -> Unit) { atomicfu_incrementAndGet(getter, setter) }
                     if (receiver is IrGetValue && parentDeclaration.isTransformedAtomicExtensionFunction()) {
@@ -362,7 +356,7 @@ class AtomicFUTransformer(override val context: IrPluginContext) : IrElementTran
                 it.getGetterReturnType()?.classifierOrNull?.owner == extensionType?.classifierOrNull?.owner
             } as IrSimpleFunction
         } catch (e: RuntimeException) {
-            error("Exception while looking for the declaration with accessor parameters: ${e.message}")
+            error("Exception while looking for the declaration ${this.render()} with accessor parameters: ${e.message}")
         }
     }
 
@@ -392,7 +386,7 @@ class AtomicFUTransformer(override val context: IrPluginContext) : IrElementTran
         val name = if (isSetter) setterName(getterCall.symbol.owner.name.getFieldName())
             else getterName(getterCall.symbol.owner.name.getFieldName())
         val returnType = if (isSetter) context.irBuiltIns.unitType else valueType
-        val accessorFunction = buildFunction(
+        val accessorFunction = context.irFactory.buildFunction(
             parent = parentDeclaration as IrDeclarationParent,
             origin = IrDeclarationOrigin.DEFAULT_PROPERTY_ACCESSOR,
             name = Name.identifier(name),
@@ -434,7 +428,7 @@ class AtomicFUTransformer(override val context: IrPluginContext) : IrElementTran
                     getField.deepCopyWithVariables()
                 }
             }
-            this.body = buildBlockBody(listOf(body))
+            this.body = context.irFactory.buildBlockBody(listOf(body))
             origin = IrDeclarationOrigin.DEFAULT_PROPERTY_ACCESSOR
         }
         return IrFunctionExpressionImpl(
@@ -463,9 +457,23 @@ class AtomicFUTransformer(override val context: IrPluginContext) : IrElementTran
         )
     }
 
+    private fun buildGetterType(valueType: IrType): IrSimpleType =
+        buildFunctionSimpleType(
+            context.irBuiltIns.functionN(0).symbol,
+            listOf(valueType)
+        )
+
+    private fun buildSetterType(valueType: IrType): IrSimpleType =
+        buildFunctionSimpleType(
+            context.irBuiltIns.functionN(1).symbol,
+            listOf(valueType, context.irBuiltIns.unitType)
+        )
+
     private fun IrCall.getAccessors(parentDeclaration: IrDeclaration): List<IrExpression> =
-        listOf(buildAccessorLambda(isSetter = false, parentDeclaration = parentDeclaration),
-               buildAccessorLambda(isSetter = true, parentDeclaration = parentDeclaration))
+        listOf(
+            buildAccessorLambda(false, parentDeclaration),
+            buildAccessorLambda(true, parentDeclaration)
+        )
 
     private fun getRuntimeFunctionSymbol(name: String, type: IrType): IrSimpleFunctionSymbol {
         val functionName = when (name) {
@@ -483,31 +491,31 @@ class AtomicFUTransformer(override val context: IrPluginContext) : IrElementTran
 
     private fun IrCall.isAtomicFactory(): Boolean {
         val name = symbol.owner.name
-        return !name.isSpecial && name.identifier == ATOMIC_CONSTRUCTOR
+        return name.asString() == ATOMIC_CONSTRUCTOR
     }
 
     private fun IrCall.isAtomicArrayFactory(): Boolean {
         val name = symbol.owner.name
-        return !name.isSpecial && name.identifier == ATOMIC_ARRAY_FACTORY_FUNCTION
+        return name.asString() == ATOMIC_ARRAY_FACTORY_FUNCTION
     }
 
     private fun IrConstructorCall.isAtomicArrayConstructor() = (type as IrSimpleType).isAtomicArrayType()
 
     private fun IrSymbol.isKotlinxAtomicfuPackage() =
-        this.isPublicApi && signature?.packageFqName()?.asString() == AFU_PKG.prettyStr()
+        this.isPublicApi && signature?.packageFqName()?.asString() == AFU_PKG
 
-    private fun IrType.isAtomicValueType() = belongsTo(ATOMICFU_VALUE_TYPE)
-    private fun IrType.isAtomicArrayType() = belongsTo(ATOMIC_ARRAY_TYPE)
-    private fun IrType.isReentrantLockType() = belongsTo("$AFU_PKG/$LOCKS", REENTRANT_LOCK_TYPE)
+    private fun IrType.isAtomicValueType() = belongsTo(ATOMICFU_VALUE_TYPE_REGEX)
+    private fun IrType.isAtomicArrayType() = belongsTo(ATOMIC_ARRAY_TYPE_REGEX)
+    private fun IrType.isReentrantLockType() = belongsTo("$AFU_PKG.$LOCKS", REENTRANT_LOCK_TYPE_REGEX)
 
-    private fun IrType.belongsTo(typeName: String) = belongsTo(AFU_PKG, typeName)
+    private fun IrType.belongsTo(typeName: Regex) = belongsTo(AFU_PKG, typeName)
 
-    private fun IrType.belongsTo(packageName: String, typeName: String): Boolean {
-        if (this !is IrSimpleType || !(classifier.isPublicApi && classifier is IrClassSymbol)) return false
-        val signature = classifier.signature?.asPublic() ?: return false
-        val pckg = signature.packageFqName().asString()
-        val type = signature.declarationFqName
-        return pckg == packageName.prettyStr() && type.matches(typeName.toRegex())
+    private fun IrType.belongsTo(packageName: String, typeNameReg: Regex): Boolean {
+        return classOrNull?.let {
+            it.signature?.asPublic()?.let { sig ->
+                sig.packageFqName == packageName && sig.declarationFqName.matches(typeNameReg)
+            }
+        } ?: false
     }
 
     private fun IrCall.getAtomicFunctionName(): String {
@@ -524,12 +532,12 @@ class AtomicFUTransformer(override val context: IrPluginContext) : IrElementTran
         // todo check correctness of this way to get type name
         val classId = ((this as IrSimpleType).classifier.signature!!.asPublic())!!.declarationFqName
         if (classId == "AtomicRef") {
-            return arguments.first().typeOrNull ?: error("$AFU_PKG/AtomicRef type parameter is not IrTypeProjection")
+            return arguments.first().typeOrNull ?: error("$AFU_PKG.AtomicRef type parameter is not IrTypeProjection")
         }
         return AFU_CLASSES[classId] ?: error("IrType ${this.getClass()} does not match any of atomicfu types")
     }
 
-    private fun buildConstNull() = IrConstImpl.constNull(UNDEFINED_OFFSET, UNDEFINED_OFFSET, context.irBuiltIns.anyType)
+    private fun buildConstNull() = IrConstImpl.constNull(UNDEFINED_OFFSET, UNDEFINED_OFFSET, context.irBuiltIns.anyNType)
 
     private fun IrType.getArrayConstructorSymbol(predicate: (IrConstructorSymbol) -> Boolean = { true }): IrConstructorSymbol {
         // todo check correctness of this way to get type name

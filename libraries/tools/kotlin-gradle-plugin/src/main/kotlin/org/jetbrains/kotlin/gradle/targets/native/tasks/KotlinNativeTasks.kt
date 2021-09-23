@@ -728,8 +728,12 @@ private class ExternalDependenciesBuilder(
     private val sourceCodeModuleId: KResolvedDependencyId =
         intermediateLibraryName?.let { KResolvedDependencyId(it) } ?: KResolvedDependencyId.DEFAULT_SOURCE_CODE_MODULE_ID
 
+    private val konanPropertiesService: KonanPropertiesBuildService
+        get() = KonanPropertiesBuildService.registerIfAbsent(project.gradle).get()
+
     fun buildCompilerArgs(): List<String> {
-        val konanVersion = Distribution(project.konanHome).compilerVersion?.let(CompilerVersion.Companion::fromString)
+        val compilerVersion = Distribution.getCompilerVersion(konanPropertiesService.compilerVersion, project.konanHome)
+        val konanVersion = compilerVersion?.let(CompilerVersion.Companion::fromString)
             ?: project.konanVersion
 
         if (konanVersion.isAtLeast(1, 6, 0)) {

@@ -53,6 +53,10 @@ abstract class KonanPropertiesBuildService : BuildService<KonanPropertiesBuildSe
     internal fun additionalCacheFlags(target: KonanTarget): List<String> =
         properties.resolvablePropertyList("additionalCacheFlags", target.visibleName)
 
+    internal val compilerVersion: String? by lazy {
+        properties["compilerVersion"]?.toString()
+    }
+
     companion object {
         fun registerIfAbsent(gradle: Gradle): Provider<KonanPropertiesBuildService> =
             gradle.sharedServices.registerIfAbsent(serviceName, KonanPropertiesBuildService::class.java) { service ->

@@ -12,7 +12,6 @@ import org.jetbrains.kotlin.descriptors.annotations.AnnotationUseSiteTarget
 import org.jetbrains.kotlin.fir.*
 import org.jetbrains.kotlin.fir.analysis.checkers.context.CheckerContext
 import org.jetbrains.kotlin.fir.analysis.checkers.context.findClosest
-import org.jetbrains.kotlin.fir.analysis.checkers.declaration.FirOverrideChecker.hasAnnotationItselfOrInParent
 import org.jetbrains.kotlin.fir.analysis.checkers.expression.FirOptInUsageBaseChecker
 import org.jetbrains.kotlin.fir.analysis.checkers.expression.FirOptInUsageBaseChecker.Experimentality
 import org.jetbrains.kotlin.fir.analysis.checkers.outerClassSymbol

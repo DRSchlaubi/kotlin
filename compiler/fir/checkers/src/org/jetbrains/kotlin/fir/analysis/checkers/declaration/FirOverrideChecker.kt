@@ -54,9 +54,7 @@ object FirOverrideChecker : FirClassChecker() {
         for (it in declaration.declarations) {
             if (it is FirSimpleFunction || it is FirProperty) {
                 val callable = it as FirCallableDeclaration
-                withSuppressedDiagnostics(callable, context) {
-                    checkMember(callable.symbol, declaration, reporter, typeCheckerState, firTypeScope, context)
-                }
+                checkMember(callable.symbol, declaration, reporter, typeCheckerState, firTypeScope, context)
             }
         }
     }

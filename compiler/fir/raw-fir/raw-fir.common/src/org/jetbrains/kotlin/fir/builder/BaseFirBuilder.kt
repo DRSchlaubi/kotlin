@@ -1118,7 +1118,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
                 val componentFunction = buildSimpleFunction {
                     source = parameterSource?.fakeElement(FirFakeSourceElementKind.DataClassGeneratedMembers)
                     moduleData = baseModuleData
-                    origin = FirDeclarationOrigin.Source
+                    origin = FirDeclarationOrigin.Synthetic
                     returnTypeRef = firProperty.returnTypeRef
                     receiverTypeRef = null
                     this.name = name
@@ -1141,7 +1141,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
                     val classTypeRef = createClassTypeRefWithSourceKind(FirFakeSourceElementKind.DataClassGeneratedMembers)
                     source = this@DataClassMembersGenerator.source.toFirSourceElement(FirFakeSourceElementKind.DataClassGeneratedMembers)
                     moduleData = baseModuleData
-                    origin = FirDeclarationOrigin.Source
+                    origin = FirDeclarationOrigin.Synthetic
                     returnTypeRef = classTypeRef
                     name = copyName
                     status = FirDeclarationStatusImpl(Visibilities.Public, Modality.FINAL)
@@ -1155,7 +1155,7 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
                         valueParameters += buildValueParameter {
                             source = parameterSource
                             moduleData = baseModuleData
-                            origin = FirDeclarationOrigin.Source
+                            origin = FirDeclarationOrigin.Synthetic
                             returnTypeRef = propertyReturnTypeRef
                             name = propertyName
                             symbol = FirValueParameterSymbol(propertyName)

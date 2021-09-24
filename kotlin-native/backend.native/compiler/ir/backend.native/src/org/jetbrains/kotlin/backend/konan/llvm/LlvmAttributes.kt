@@ -48,27 +48,6 @@ private fun addTargetCpuAndFeaturesAttributes(context: Context, llvmFunction: LL
     }
 }
 
-internal fun addLlvmAttributesForKotlinFunction(context: Context, irFunction: IrFunction, llvmFunction: LLVMValueRef) {
-    if (irFunction.returnType.isNothing()) {
-        setFunctionNoReturn(llvmFunction)
-    }
-
-    if (mustNotInline(context, irFunction)) {
-        setFunctionNoInline(llvmFunction)
-    }
-}
-
-private fun mustNotInline(context: Context, irFunction: IrFunction): Boolean {
-    if (context.shouldContainLocationDebugInfo()) {
-        if (irFunction is IrConstructor && irFunction.isPrimary && irFunction.returnType.isThrowable()) {
-            // To simplify skipping this constructor when scanning call stack in Kotlin_getCurrentStackTrace.
-            return true
-        }
-    }
-
-    return false
-}
-
 private fun shouldEnforceFramePointer(context: Context): Boolean {
     // TODO: do we still need it?
     if (!context.shouldOptimize()) {

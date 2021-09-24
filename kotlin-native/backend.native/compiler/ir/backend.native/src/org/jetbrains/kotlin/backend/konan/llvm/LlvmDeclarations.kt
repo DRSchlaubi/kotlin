@@ -375,7 +375,7 @@ private class DeclarationsGeneratorVisitor(override val context: Context) :
                     symbolName,
                     proto.llvmFunctionType
             ).also {
-                addLlvmAttributesForKotlinFunction(context, declaration, it)
+                proto.addFunctionAttributes(it)
             }
             llvmFunction to proto
         }

@@ -9,11 +9,15 @@ import kotlinx.cinterop.allocArray
 import kotlinx.cinterop.get
 import kotlinx.cinterop.memScoped
 import llvm.*
+import org.jetbrains.kotlin.backend.konan.Context
 import org.jetbrains.kotlin.backend.konan.RuntimeNames
 import org.jetbrains.kotlin.backend.konan.ir.llvmSymbolOrigin
 import org.jetbrains.kotlin.descriptors.konan.CompiledKlibModuleOrigin
+import org.jetbrains.kotlin.ir.declarations.IrConstructor
 import org.jetbrains.kotlin.ir.declarations.IrFunction
+import org.jetbrains.kotlin.ir.types.isNothing
 import org.jetbrains.kotlin.ir.util.hasAnnotation
+import org.jetbrains.kotlin.ir.util.isThrowable
 
 interface LlvmFunctionPrototype {
     val llvmReturnType: LLVMTypeRef
@@ -154,11 +158,31 @@ class LlvmFunctionProto(
     }
 }
 
-fun RuntimeAware.LlvmFunctionProto(irFunction: IrFunction, symbolName: String): LlvmFunctionProto {
+private fun mustNotInline(context: Context, irFunction: IrFunction): Boolean {
+    if (context.shouldContainLocationDebugInfo()) {
+        if (irFunction is IrConstructor && irFunction.isPrimary && irFunction.returnType.isThrowable()) {
+            // To simplify skipping this constructor when scanning call stack in Kotlin_getCurrentStackTrace.
+            return true
+        }
+    }
+
+    return false
+}
+
+internal fun ContextUtils.LlvmFunctionProto(irFunction: IrFunction, symbolName: String): LlvmFunctionProto {
+    val functionAttributes = mutableListOf<LlvmFunctionAttribute>().apply {
+        if (irFunction.returnType.isNothing()) {
+            add(LlvmFunctionAttribute.NoReturn)
+        }
+        if (mustNotInline(context, irFunction)) {
+            add(LlvmFunctionAttribute.NoInline)
+        }
+    }
     return LlvmFunctionProto(
             name = symbolName,
             returnType = getLlvmFunctionReturnType(irFunction),
             parameterTypes = getLlvmFunctionParameterTypes(irFunction),
+            functionAttributes = functionAttributes,
             origin = irFunction.llvmSymbolOrigin,
             independent = irFunction.hasAnnotation(RuntimeNames.independent)
     )

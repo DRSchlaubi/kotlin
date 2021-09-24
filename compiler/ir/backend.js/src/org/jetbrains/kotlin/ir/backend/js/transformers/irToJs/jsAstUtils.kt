@@ -42,6 +42,25 @@ fun <T : JsNode> IrWhen.toJsNode(
         }
     }
 
+// https://mathiasbynens.be/notes/globalthis
+// TODO: add DCE for globalThis polyfill declaration
+fun jsGlobalThisPolyfill(): List<JsStatement> =
+    parseJsCode(
+        """
+        (function() {
+            if (typeof globalThis === 'object') return; 
+            Object.defineProperty(Object.prototype, '__magic__', {
+                get: function() {
+                    return this;
+                },
+                configurable: true
+            });
+            __magic__.globalThis = __magic__;
+            delete Object.prototype.__magic__;
+        }());
+        """.trimIndent()
+    ) ?: emptyList()
+
 fun jsAssignment(left: JsExpression, right: JsExpression) = JsBinaryOperation(JsBinaryOperator.ASG, left, right)
 
 fun prototypeOf(classNameRef: JsExpression) = JsNameRef(Namer.PROTOTYPE_NAME, classNameRef)

@@ -13,6 +13,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: listOf
   origin: LIBRARY
@@ -47,6 +48,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: listOf
   origin: LIBRARY
@@ -74,6 +76,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: listOf
   origin: LIBRARY

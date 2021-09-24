@@ -51,6 +51,7 @@ public abstract class KtFunctionSymbol : KtFunctionLikeSymbol(),
     public abstract val isOverride: Boolean
     public abstract val isInfix: Boolean
     public abstract val isStatic: Boolean
+    public abstract val isSynthetic: Boolean
 
     abstract override fun createPointer(): KtSymbolPointer<KtFunctionSymbol>
 }

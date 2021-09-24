@@ -13,6 +13,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: x
   origin: SOURCE
@@ -38,6 +39,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: y
   origin: SOURCE

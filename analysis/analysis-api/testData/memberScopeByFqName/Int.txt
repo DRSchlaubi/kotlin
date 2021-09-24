@@ -13,6 +13,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: and
   origin: LIBRARY
@@ -40,6 +41,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: compareTo
   origin: LIBRARY
@@ -67,6 +69,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: compareTo
   origin: LIBRARY
@@ -94,6 +97,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: compareTo
   origin: LIBRARY
@@ -121,6 +125,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: OPEN
   name: compareTo
   origin: LIBRARY
@@ -148,6 +153,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: compareTo
   origin: LIBRARY
@@ -175,6 +181,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: compareTo
   origin: LIBRARY
@@ -202,6 +209,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: dec
   origin: LIBRARY
@@ -227,6 +235,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: div
   origin: LIBRARY
@@ -254,6 +263,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: div
   origin: LIBRARY
@@ -281,6 +291,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: div
   origin: LIBRARY
@@ -308,6 +319,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: div
   origin: LIBRARY
@@ -335,6 +347,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: div
   origin: LIBRARY
@@ -362,6 +375,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: div
   origin: LIBRARY
@@ -389,6 +403,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: inc
   origin: LIBRARY
@@ -414,6 +429,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: inv
   origin: LIBRARY
@@ -439,6 +455,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: minus
   origin: LIBRARY
@@ -466,6 +483,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: minus
   origin: LIBRARY
@@ -493,6 +511,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: minus
   origin: LIBRARY
@@ -520,6 +539,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: minus
   origin: LIBRARY
@@ -547,6 +567,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: minus
   origin: LIBRARY
@@ -574,6 +595,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: minus
   origin: LIBRARY
@@ -601,6 +623,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: or
   origin: LIBRARY
@@ -628,6 +651,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: plus
   origin: LIBRARY
@@ -655,6 +679,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: plus
   origin: LIBRARY
@@ -682,6 +707,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: plus
   origin: LIBRARY
@@ -709,6 +735,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: plus
   origin: LIBRARY
@@ -736,6 +763,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: plus
   origin: LIBRARY
@@ -763,6 +791,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: plus
   origin: LIBRARY
@@ -790,6 +819,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: rangeTo
   origin: LIBRARY
@@ -817,6 +847,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: rangeTo
   origin: LIBRARY
@@ -844,6 +875,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: rangeTo
   origin: LIBRARY
@@ -871,6 +903,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: rangeTo
   origin: LIBRARY
@@ -903,6 +936,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: rem
   origin: LIBRARY
@@ -935,6 +969,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: rem
   origin: LIBRARY
@@ -967,6 +1002,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: rem
   origin: LIBRARY
@@ -999,6 +1035,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: rem
   origin: LIBRARY
@@ -1031,6 +1068,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: rem
   origin: LIBRARY
@@ -1063,6 +1101,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: rem
   origin: LIBRARY
@@ -1090,6 +1129,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: shl
   origin: LIBRARY
@@ -1117,6 +1157,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: shr
   origin: LIBRARY
@@ -1144,6 +1185,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: times
   origin: LIBRARY
@@ -1171,6 +1213,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: times
   origin: LIBRARY
@@ -1198,6 +1241,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: times
   origin: LIBRARY
@@ -1225,6 +1269,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: times
   origin: LIBRARY
@@ -1252,6 +1297,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: times
   origin: LIBRARY
@@ -1279,6 +1325,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: times
   origin: LIBRARY
@@ -1306,6 +1353,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: OPEN
   name: toByte
   origin: LIBRARY
@@ -1331,6 +1379,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: OPEN
   name: toChar
   origin: LIBRARY
@@ -1356,6 +1405,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: OPEN
   name: toDouble
   origin: LIBRARY
@@ -1381,6 +1431,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: OPEN
   name: toFloat
   origin: LIBRARY
@@ -1406,6 +1457,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: OPEN
   name: toInt
   origin: LIBRARY
@@ -1431,6 +1483,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: OPEN
   name: toLong
   origin: LIBRARY
@@ -1456,6 +1509,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: OPEN
   name: toShort
   origin: LIBRARY
@@ -1481,6 +1535,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: unaryMinus
   origin: LIBRARY
@@ -1506,6 +1561,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: unaryPlus
   origin: LIBRARY
@@ -1531,6 +1587,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: ushr
   origin: LIBRARY
@@ -1558,6 +1615,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: xor
   origin: LIBRARY
@@ -1585,6 +1643,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: OPEN
   name: equals
   origin: LIBRARY
@@ -1612,6 +1671,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: OPEN
   name: hashCode
   origin: LIBRARY
@@ -1637,6 +1697,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: OPEN
   name: toString
   origin: LIBRARY

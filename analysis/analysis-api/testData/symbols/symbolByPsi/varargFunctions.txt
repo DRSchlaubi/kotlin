@@ -27,6 +27,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: primitive
   origin: SOURCE
@@ -68,6 +69,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: nullablePrimitive
   origin: SOURCE
@@ -109,6 +111,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: nonPrimitive
   origin: SOURCE
@@ -150,6 +153,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: error
   origin: SOURCE

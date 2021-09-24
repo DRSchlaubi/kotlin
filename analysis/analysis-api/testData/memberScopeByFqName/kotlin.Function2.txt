@@ -13,6 +13,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: invoke
   origin: LIBRARY
@@ -41,6 +42,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: OPEN
   name: equals
   origin: LIBRARY
@@ -68,6 +70,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: OPEN
   name: hashCode
   origin: LIBRARY
@@ -93,6 +96,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: OPEN
   name: toString
   origin: LIBRARY

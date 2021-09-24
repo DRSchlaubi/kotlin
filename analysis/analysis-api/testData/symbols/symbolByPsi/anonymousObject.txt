@@ -13,6 +13,7 @@ KtFirFunctionSymbol:
   isOverride: true
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: FINAL
   name: run
   origin: SOURCE

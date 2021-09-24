@@ -13,6 +13,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: add
   origin: LIBRARY
@@ -40,6 +41,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: add
   origin: LIBRARY
@@ -68,6 +70,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: addAll
   origin: LIBRARY
@@ -96,6 +99,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: addAll
   origin: LIBRARY
@@ -123,6 +127,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: clear
   origin: LIBRARY
@@ -148,6 +153,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: listIterator
   origin: LIBRARY
@@ -173,6 +179,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: listIterator
   origin: LIBRARY
@@ -200,6 +207,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: remove
   origin: LIBRARY
@@ -227,6 +235,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: removeAll
   origin: LIBRARY
@@ -254,6 +263,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: removeAt
   origin: LIBRARY
@@ -281,6 +291,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: retainAll
   origin: LIBRARY
@@ -308,6 +319,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: set
   origin: LIBRARY
@@ -336,6 +348,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: subList
   origin: LIBRARY
@@ -364,6 +377,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: contains
   origin: LIBRARY
@@ -391,6 +405,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: containsAll
   origin: LIBRARY
@@ -418,6 +433,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: get
   origin: LIBRARY
@@ -445,6 +461,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: indexOf
   origin: LIBRARY
@@ -472,6 +489,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: isEmpty
   origin: LIBRARY
@@ -497,6 +515,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: iterator
   origin: INTERSECTION_OVERRIDE
@@ -522,6 +541,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: ABSTRACT
   name: lastIndexOf
   origin: LIBRARY
@@ -580,6 +600,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: OPEN
   name: equals
   origin: LIBRARY
@@ -607,6 +628,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: OPEN
   name: hashCode
   origin: LIBRARY
@@ -632,6 +654,7 @@ KtFirFunctionSymbol:
   isOverride: false
   isStatic: false
   isSuspend: false
+  isSynthetic: false
   modality: OPEN
   name: toString
   origin: LIBRARY

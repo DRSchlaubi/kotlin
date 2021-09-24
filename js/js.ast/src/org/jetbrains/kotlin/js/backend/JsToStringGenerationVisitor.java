@@ -783,9 +783,7 @@ public class JsToStringGenerationVisitor extends JsVisitor {
     public void visitNameRef(@NotNull JsNameRef nameRef) {
         pushSourceInfo(nameRef.getSource());
 
-        JsName name = nameRef.getName();
         JsExpression qualifier = nameRef.getQualifier();
-        boolean shouldBeAMemberExpression = qualifier != null && name != null && name.containsAnyUnresolvedChar();
 
         if (qualifier != null) {
             boolean enclose;
@@ -805,22 +803,11 @@ public class JsToStringGenerationVisitor extends JsVisitor {
                 rightParen();
             }
 
-            if (shouldBeAMemberExpression) {
-                leftSquare();
-                p.print('"');
-            }
-            else {
-                p.print('.');
-            }
+            p.print('.');
         }
 
         p.maybeIndent();
         p.print(nameRef.getIdent());
-
-        if (shouldBeAMemberExpression) {
-            p.print('"');
-            rightSquare();
-        }
 
         popSourceInfo();
     }
@@ -909,7 +896,9 @@ public class JsToStringGenerationVisitor extends JsVisitor {
                 p.print(((JsNameRef) labelExpr).getIdent());
             }
             else if (labelExpr instanceof JsStringLiteral) {
+                p.print('\'');
                 p.print(((JsStringLiteral) labelExpr).getValue());
+                p.print('\'');
             }
             else {
                 accept(labelExpr);

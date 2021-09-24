@@ -6,7 +6,6 @@ package org.jetbrains.kotlin.js.backend.ast;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.kotlin.js.backend.ast.metadata.HasMetadata;
-import org.jetbrains.kotlin.js.common.IdentifierPolicy;
 import org.jetbrains.kotlin.js.common.Symbol;
 
 /**
@@ -32,10 +31,6 @@ public class JsName extends HasMetadata implements Symbol {
 
   public boolean isTemporary() {
     return temporary;
-  }
-
-  public boolean containsAnyUnresolvedChar() {
-    return !IdentifierPolicy.isValidES5Identifier(ident);
   }
 
   @NotNull

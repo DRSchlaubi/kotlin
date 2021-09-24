@@ -19,7 +19,9 @@ import org.jetbrains.kotlin.ir.util.isEffectivelyExternal
 import org.jetbrains.kotlin.ir.util.render
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
-import org.jetbrains.kotlin.js.common.IdentifierPolicy
+import org.jetbrains.kotlin.js.naming.isES5IdentifierPart
+import org.jetbrains.kotlin.js.naming.isES5IdentifierStart
+import org.jetbrains.kotlin.js.naming.isValidES5Identifier
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 import java.util.*
@@ -366,17 +368,17 @@ class LocalNameGenerator(parentScope: NameScope) : IrElementVisitorVoid {
 
 
 fun sanitizeName(name: String): String {
-    if (IdentifierPolicy.isValidES5Identifier(name)) return name
+    if (name.isValidES5Identifier()) return name
     if (name.isEmpty()) return "_"
 
     val builder = StringBuilder()
 
-    val first = name.first().let { if (IdentifierPolicy.isES5IdentifierStart(it)) it else '_' }
+    val first = name.first().let { if (it.isES5IdentifierStart()) it else '_' }
     builder.append(first)
 
     for (idx in 1..name.lastIndex) {
         val c = name[idx]
-        builder.append(if (IdentifierPolicy.isES5IdentifierPart(c)) c else '_')
+        builder.append(if (c.isES5IdentifierPart()) c else '_')
     }
 
     return builder.toString()

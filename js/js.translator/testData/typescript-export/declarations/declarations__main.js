@@ -22,6 +22,7 @@ var _valCustomWithField = JS_TESTS.foo._valCustomWithField;
 var A4 = JS_TESTS.foo.A4;
 var O = JS_TESTS.foo.O;
 var takesO = JS_TESTS.foo.takesO;
+var KT_37829 = JS_TESTS.foo.KT_37829;
 function assert(condition) {
     if (!condition) {
         throw "Assertion failed";
@@ -67,6 +68,7 @@ function box() {
     new A();
     assert(new A1(10).x === 10);
     assert(new A2("10", true).x === "10");
+    assert(new A2("10", true).y);
     assert(new A3().x === 100);
     var a4 = new A4();
     assert(a4._valCustom === 1);
@@ -80,5 +82,6 @@ function box() {
     assert(O.x === 10);
     assert(O.foo() === 20);
     assert(takesO(O) === 30);
+    assert(KT_37829.Companion.x == 10);
     return "OK";
 }

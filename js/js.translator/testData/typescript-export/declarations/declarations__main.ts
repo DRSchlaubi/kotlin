@@ -78,8 +78,8 @@ function box(): string {
     new A();
     assert(new A1(10).x === 10);
     assert(new A2("10", true).x === "10");
+    assert(new A2("10", true).y);
     assert(new A3().x === 100);
-
 
     const a4 = new A4();
 

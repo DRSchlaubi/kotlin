@@ -22,7 +22,7 @@ declare namespace JS_TESTS {
         }
         class A4 {
             constructor();
-            static readonly Companion: {
+            readonly Companion: {
                 "@invalid+name@": number;
                 "^)run.something.weird^("(): string;
             };

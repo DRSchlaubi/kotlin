@@ -84,13 +84,12 @@ fun ExportedDeclaration.toTypeScript(indent: String, prefix: String = ""): Strin
             isMember -> (if (isAbstract) "abstract " else "") + (if (!mutable) "readonly " else "")
             else -> if (mutable) "let " else "const "
         }
-        val possibleStatic = if (isMember && isStatic) "static " else ""
         val containsUnresolvedChar = !name.isValidES5Identifier()
         val memberName = when {
             isMember && containsUnresolvedChar -> "\"$name\""
             else -> name
         }
-        if (!isMember && containsUnresolvedChar) "" else "$prefix$visibility$possibleStatic$keyword$memberName: ${type.toTypeScript(indent)};"
+        if (!isMember && containsUnresolvedChar) "" else "$prefix$visibility$keyword$memberName: ${type.toTypeScript(indent)};"
     }
 
     is ExportedClass -> {

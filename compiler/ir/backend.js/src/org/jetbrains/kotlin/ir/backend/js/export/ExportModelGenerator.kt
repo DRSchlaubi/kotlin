@@ -222,7 +222,7 @@ class ExportModelGenerator(val context: JsIrBackendContext) {
                 type = t,
                 mutable = false,
                 isMember = klass.parent is IrClass,
-                isStatic = !klass.isInner,
+                isStatic = true,
                 isAbstract = false,
                 isProtected = klass.visibility == DescriptorVisibilities.PROTECTED,
                 irGetter = context.mapping.objectToGetInstanceFunction[klass]!!,

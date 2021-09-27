@@ -25,11 +25,22 @@ dependencies {
     testApi(projectTests(":compiler:tests-compiler-utils"))
     testApi(projectTests(":compiler:tests-common-jvm6"))
 
-    testRuntimeOnly(intellijDep()) {
-        includeJars("jna", rootProject = rootProject)
+    testApi(intellijDep()) {
+        includeJars(
+            "intellij-deps-fastutil-8.4.1-4",
+            "idea_rt",
+            "jps-model",
+            "platform-impl",
+            "streamex",
+            rootProject = rootProject
+        )
     }
-
-    testRuntimeOnly(intellijDep()) { includeJars("intellij-deps-fastutil-8.4.1-4") }
+    testRuntimeOnly(intellijDep()) {
+        includeJars(
+            "jna",
+            rootProject = rootProject
+        )
+    }
     testRuntimeOnly(toolsJar())
 }
 

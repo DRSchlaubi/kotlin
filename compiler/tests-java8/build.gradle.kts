@@ -12,7 +12,6 @@ dependencies {
     testApi(projectTests(":generators:test-generator"))
     testRuntimeOnly(project(":kotlin-reflect"))
     testRuntimeOnly(toolsJar())
-    testRuntimeOnly(intellijDep())
     testRuntimeOnly(intellijPluginDep("java"))
     if (isIdeaActive) testRuntimeOnly(files("${rootProject.projectDir}/dist/kotlinc/lib/kotlin-reflect.jar"))
 }

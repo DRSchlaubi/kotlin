@@ -56,8 +56,17 @@ dependencies {
     testCompileOnly(project(":kotlin-reflect-api"))
     testCompileOnly(toolsJar())
     testCompileOnly(intellijCoreDep()) { includeJars("intellij-core") }
-    testApi(intellijDep()) { includeJars("intellij-deps-fastutil-8.4.1-4") }
     testApi(intellijDep()) {
+        includeJars(
+            "intellij-deps-fastutil-8.4.1-4",
+            "idea_rt",
+            "jps-model",
+            "platform-impl",
+            "streamex",
+            rootProject = rootProject
+        )
+    }
+    testImplementation(intellijDep()) {
         includeJars(
             "guava",
             "trove4j",
@@ -67,9 +76,7 @@ dependencies {
             "jna",
             rootProject = rootProject
         )
-        isTransitive = false
     }
-
     testApiJUnit5()
 }
 

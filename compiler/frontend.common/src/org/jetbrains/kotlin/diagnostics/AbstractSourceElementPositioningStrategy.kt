@@ -6,12 +6,12 @@
 package org.jetbrains.kotlin.diagnostics
 
 import com.intellij.openapi.util.TextRange
-import org.jetbrains.kotlin.KtSourceElement
+import org.jetbrains.kotlin.AbstractKtSourceElement
 
 abstract class AbstractSourceElementPositioningStrategy {
     abstract fun markDiagnostic(diagnostic: KtDiagnostic): List<TextRange>
 
-    abstract fun isValid(element: KtSourceElement): Boolean
+    abstract fun isValid(element: AbstractKtSourceElement): Boolean
 
     companion object {
 
@@ -19,7 +19,7 @@ abstract class AbstractSourceElementPositioningStrategy {
             lateinit var currentDefault: AbstractSourceElementPositioningStrategy
 
             override fun markDiagnostic(diagnostic: KtDiagnostic): List<TextRange> = currentDefault.markDiagnostic(diagnostic)
-            override fun isValid(element: KtSourceElement): Boolean = currentDefault.isValid(element)
+            override fun isValid(element: AbstractKtSourceElement): Boolean = currentDefault.isValid(element)
         }
 
         @JvmStatic

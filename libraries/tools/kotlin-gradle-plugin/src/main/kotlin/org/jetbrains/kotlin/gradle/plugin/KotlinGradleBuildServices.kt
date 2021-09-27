@@ -22,6 +22,7 @@ import org.jetbrains.kotlin.gradle.plugin.statistics.KotlinBuildEsStatListener
 import org.jetbrains.kotlin.gradle.plugin.statistics.ReportStatisticsToBuildScan
 import org.jetbrains.kotlin.gradle.plugin.statistics.ReportStatisticsToElasticSearch
 import org.jetbrains.kotlin.gradle.report.configureReporting
+import org.jetbrains.kotlin.gradle.utils.isBuildScanAvailable
 import org.jetbrains.kotlin.gradle.utils.isConfigurationCacheAvailable
 import java.util.*
 
@@ -78,15 +79,16 @@ internal class KotlinGradleBuildServices private constructor(
             val kotlinGradleEsListenerProvider = project.provider {
                 val listeners = project.rootProject.objects.listProperty(ReportStatistics::class.java)
                     .value(listOf<ReportStatistics>(ReportStatisticsToElasticSearch))
-                project.rootProject.extensions.findByName("buildScan")
-                    ?.also { listeners.add(ReportStatisticsToBuildScan(it as BuildScanExtension)) }
-                KotlinBuildEsStatListener(project.rootProject.name, listeners.get(), UUID.randomUUID().toString())
+                if (isBuildScanAvailable(project.gradle)) {
+                    project.rootProject.extensions.findByName("buildScan")
+                        ?.also { listeners.add(ReportStatisticsToBuildScan(it as BuildScanExtension)) }
+                }
+                KotlinBuildEsStatListener(project.rootProject.name, listeners.get())
             }
 
 
             if (instance != null) {
                 log.kotlinDebug(ALREADY_INITIALIZED_MESSAGE)
-//                instance!!.gradleListenerProviders.forEach { listenerRegistry.onTaskCompletion(it) }
                 return instance!!
             }
 

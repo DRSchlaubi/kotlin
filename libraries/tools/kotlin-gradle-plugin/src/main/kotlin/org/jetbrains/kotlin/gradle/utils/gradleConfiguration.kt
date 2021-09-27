@@ -16,6 +16,14 @@ internal fun isConfigurationCacheAvailable(gradle: Gradle) =
         null
     } ?: false
 
+internal fun isBuildScanAvailable(gradle: Gradle) =
+    try {
+        val startParameters = gradle.startParameter
+        startParameters.javaClass.getMethod("isBuildScan").invoke(startParameters) as? Boolean
+    } catch (_: Exception) {
+        null
+    } ?: false
+
 internal fun Project.getSystemProperty(key: String): String? {
     return if (isConfigurationCacheAvailable(gradle)) {
         providers.systemProperty(key).forUseAtConfigurationTime().orNull

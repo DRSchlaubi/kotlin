@@ -25837,6 +25837,12 @@ public class DiagnosisCompilerTestFE10TestdataTestGenerated extends AbstractDiag
                 }
 
                 @Test
+                @TestMetadata("protectedPropertyInPrimaryConstructor.kt")
+                public void testProtectedPropertyInPrimaryConstructor() throws Exception {
+                    runTest("compiler/testData/diagnostics/tests/scopes/protectedVisibility/protectedPropertyInPrimaryConstructor.kt");
+                }
+
+                @Test
                 @TestMetadata("smartcastOnExtensionReceiver.kt")
                 public void testSmartcastOnExtensionReceiver() throws Exception {
                     runTest("compiler/testData/diagnostics/tests/scopes/protectedVisibility/smartcastOnExtensionReceiver.kt");

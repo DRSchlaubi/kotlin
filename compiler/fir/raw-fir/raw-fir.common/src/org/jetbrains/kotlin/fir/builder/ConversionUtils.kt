@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.fir.*
 import org.jetbrains.kotlin.fir.contracts.FirContractDescription
 import org.jetbrains.kotlin.fir.contracts.builder.buildLegacyRawContractDescription
+import org.jetbrains.kotlin.fir.declarations.FirCallableDeclaration
 import org.jetbrains.kotlin.fir.declarations.FirDeclarationOrigin
 import org.jetbrains.kotlin.fir.declarations.FirVariable
 import org.jetbrains.kotlin.fir.declarations.builder.*
@@ -29,6 +30,7 @@ import org.jetbrains.kotlin.fir.references.builder.buildResolvedNamedReference
 import org.jetbrains.kotlin.fir.references.builder.buildSimpleNamedReference
 import org.jetbrains.kotlin.fir.symbols.constructStarProjectedType
 import org.jetbrains.kotlin.fir.symbols.impl.*
+import org.jetbrains.kotlin.fir.types.ConeClassLikeType
 import org.jetbrains.kotlin.fir.types.ConeStarProjection
 import org.jetbrains.kotlin.fir.types.FirTypeRef
 import org.jetbrains.kotlin.fir.types.builder.buildImplicitTypeRef
@@ -549,6 +551,14 @@ fun FirQualifiedAccess.wrapWithSafeCall(receiver: FirExpression, source: FirSour
         this.regularQualifiedAccess = this@wrapWithSafeCall
         this.source = source
     }
+}
+
+fun <T> FirCallableDeclaration.initContainingClassAttr(context: Context<T>) {
+    containingClassForStaticMemberAttr = currentDispatchReceiverType(context)?.lookupTag ?: return
+}
+
+fun <T> currentDispatchReceiverType(context: Context<T>): ConeClassLikeType? {
+    return context.dispatchReceiverTypesStack.lastOrNull()
 }
 
 val CharSequence.isUnderscore: Boolean

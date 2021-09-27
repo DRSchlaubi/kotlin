@@ -519,7 +519,8 @@ class DeclarationsConverter(
                                     baseModuleData,
                                     callableIdForName(it.firValueParameter.name),
                                     classWrapper.hasExpect(),
-                                    currentDispatchReceiverType()
+                                    currentDispatchReceiverType(),
+                                    context
                                 )
                             }
                         addDeclarations(properties)

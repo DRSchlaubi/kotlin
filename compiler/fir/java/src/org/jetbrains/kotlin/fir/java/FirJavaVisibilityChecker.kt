@@ -10,6 +10,7 @@ import org.jetbrains.kotlin.descriptors.java.JavaVisibilities
 import org.jetbrains.kotlin.fir.*
 import org.jetbrains.kotlin.fir.declarations.FirDeclaration
 import org.jetbrains.kotlin.fir.declarations.FirFile
+import org.jetbrains.kotlin.fir.declarations.synthetic.FirSyntheticPropertyAccessor
 import org.jetbrains.kotlin.fir.resolve.calls.ReceiverValue
 import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.*
@@ -32,7 +33,8 @@ object FirJavaVisibilityChecker : FirVisibilityChecker() {
                     val ownerLookupTag = symbol.getOwnerLookupTag()
                     ownerLookupTag != null && canSeeProtectedMemberOf(
                         containingDeclarations, dispatchReceiver, ownerLookupTag, session,
-                        isVariableOrNamedFunction = symbol is FirVariableSymbol || symbol is FirNamedFunctionSymbol
+                        isVariableOrNamedFunction = symbol is FirVariableSymbol || symbol is FirNamedFunctionSymbol || symbol is FirPropertyAccessorSymbol,
+                        isSyntheticProperty = symbol.fir is FirSyntheticPropertyAccessor
                     )
                 }
             }

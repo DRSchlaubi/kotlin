@@ -571,7 +571,7 @@ open class RawFirBuilder(
                     type.copyWithNewSourceKind(FirFakeSourceElementKind.DefaultAccessor),
                     visibility,
                     symbol,
-                )
+                ).also { it.initContainingClassAttr() }
                 setter = if (isMutable) FirDefaultPropertySetter(
                     defaultAccessorSource,
                     baseModuleData,
@@ -579,7 +579,7 @@ open class RawFirBuilder(
                     type.copyWithNewSourceKind(FirFakeSourceElementKind.DefaultAccessor),
                     visibility,
                     symbol,
-                ) else null
+                ).also { it.initContainingClassAttr() } else null
                 extractAnnotationsTo(this)
 
                 dispatchReceiverType = currentDispatchReceiverType()

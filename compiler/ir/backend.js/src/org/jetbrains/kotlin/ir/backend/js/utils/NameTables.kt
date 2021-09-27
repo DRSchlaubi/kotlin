@@ -19,9 +19,9 @@ import org.jetbrains.kotlin.ir.util.isEffectivelyExternal
 import org.jetbrains.kotlin.ir.util.render
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
-import org.jetbrains.kotlin.js.naming.isES5IdentifierPart
-import org.jetbrains.kotlin.js.naming.isES5IdentifierStart
-import org.jetbrains.kotlin.js.naming.isValidES5Identifier
+import org.jetbrains.kotlin.js.common.isES5IdentifierPart
+import org.jetbrains.kotlin.js.common.isES5IdentifierStart
+import org.jetbrains.kotlin.js.common.isValidES5Identifier
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 import java.util.*

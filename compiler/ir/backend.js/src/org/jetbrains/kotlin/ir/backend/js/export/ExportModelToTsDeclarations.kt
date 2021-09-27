@@ -6,8 +6,7 @@
 package org.jetbrains.kotlin.ir.backend.js.export
 
 import org.jetbrains.kotlin.ir.backend.js.utils.sanitizeName
-import org.jetbrains.kotlin.js.backend.ast.JsName
-import org.jetbrains.kotlin.js.naming.isValidES5Identifier
+import org.jetbrains.kotlin.js.common.isValidES5Identifier
 import org.jetbrains.kotlin.serialization.js.ModuleKind
 
 // TODO: Support module kinds other than plain

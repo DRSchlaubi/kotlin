@@ -18,7 +18,7 @@ import org.jetbrains.kotlin.ir.types.classifierOrNull
 import org.jetbrains.kotlin.ir.types.isAny
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.js.backend.ast.*
-import org.jetbrains.kotlin.js.naming.isValidES5Identifier
+import org.jetbrains.kotlin.js.common.isValidES5Identifier
 import org.jetbrains.kotlin.utils.addIfNotNull
 
 class JsClassGenerator(private val irClass: IrClass, val context: JsGenerationContext) {

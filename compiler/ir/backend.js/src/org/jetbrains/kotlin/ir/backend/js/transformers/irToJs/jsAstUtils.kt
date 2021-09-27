@@ -19,7 +19,7 @@ import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.ir.visitors.acceptChildrenVoid
 import org.jetbrains.kotlin.ir.visitors.acceptVoid
 import org.jetbrains.kotlin.js.backend.ast.*
-import org.jetbrains.kotlin.js.naming.isValidES5Identifier
+import org.jetbrains.kotlin.js.common.isValidES5Identifier
 import org.jetbrains.kotlin.util.OperatorNameConventions
 import org.jetbrains.kotlin.utils.addIfNotNull
 
@@ -76,7 +76,6 @@ fun jsGlobalVarRef(ref: JsNameRef): JsExpression =
         jsElementAccess(ref.ident, JsNameRef("globalThis"))
     }
 
->>>>>>> 9dc22d8d452 (feat: add escaped identifiers in Kotlin/JS for new IR backend.)
 fun jsAssignment(left: JsExpression, right: JsExpression) = JsBinaryOperation(JsBinaryOperator.ASG, left, right)
 
 fun prototypeOf(classNameRef: JsExpression) = JsNameRef(Namer.PROTOTYPE_NAME, classNameRef)

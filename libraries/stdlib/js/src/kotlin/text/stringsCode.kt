@@ -145,8 +145,10 @@ public actual fun CharSequence.repeat(n: Int): String {
  * @sample samples.text.Strings.replace
  */
 @Suppress("ACTUAL_FUNCTION_WITH_DEFAULT_ARGUMENTS")
-public actual fun String.replace(oldValue: String, newValue: String, ignoreCase: Boolean = false): String =
-    nativeReplace(RegExp(Regex.escape(oldValue), if (ignoreCase) "gui" else "gu"), Regex.escapeReplacement(newValue))
+public actual fun String.replace(oldValue: String, newValue: String, ignoreCase: Boolean = false): String {
+    val regex = if (ignoreCase) Regex(Regex.escape(oldValue), RegexOption.IGNORE_CASE) else Regex(Regex.escape(oldValue))
+    return regex.replace(this, Regex.escapeReplacement(newValue))
+}
 
 /**
  * Returns a new string with all occurrences of [oldChar] replaced with [newChar].
@@ -158,8 +160,10 @@ public actual fun String.replace(oldChar: Char, newChar: Char, ignoreCase: Boole
     nativeReplace(RegExp(Regex.escape(oldChar.toString()), if (ignoreCase) "gui" else "gu"), newChar.toString())
 
 @Suppress("ACTUAL_FUNCTION_WITH_DEFAULT_ARGUMENTS")
-public actual fun String.replaceFirst(oldValue: String, newValue: String, ignoreCase: Boolean = false): String =
-    nativeReplace(RegExp(Regex.escape(oldValue), if (ignoreCase) "ui" else "u"), Regex.escapeReplacement(newValue))
+public actual fun String.replaceFirst(oldValue: String, newValue: String, ignoreCase: Boolean = false): String {
+    val regex = if (ignoreCase) Regex(Regex.escape(oldValue), RegexOption.IGNORE_CASE) else Regex(Regex.escape(oldValue))
+    return regex.replaceFirst(this, Regex.escapeReplacement(newValue))
+}
 
 @Suppress("ACTUAL_FUNCTION_WITH_DEFAULT_ARGUMENTS")
 public actual fun String.replaceFirst(oldChar: Char, newChar: Char, ignoreCase: Boolean = false): String =

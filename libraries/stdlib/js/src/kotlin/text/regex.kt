@@ -6,6 +6,7 @@
 package kotlin.text
 
 import kotlin.js.RegExp
+import kotlin.js.RegExpMatch
 
 /**
  * Provides enumeration values to use to set regular expression options.
@@ -144,9 +145,27 @@ public actual class Regex actual constructor(pattern: String, options: Set<Regex
     /**
      * Replaces all occurrences of this regular expression in the specified [input] string with specified [replacement] expression.
      *
-     * @param replacement A replacement expression that can include substitutions. See [String.prototype.replace](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace) function docs for details.
+     * The replacement string may contain references to the captured groups during a match. Occurrences of `${name}` or `$index`
+     * in the replacement string will be substituted with the subsequences corresponding to the captured groups with the specified name or index.
+     * In case of `$index` the first digit after '$' is always treated as part of group reference. Subsequent digits are incorporated
+     * into `index` only if they would form a valid group reference. Only the digits '0'..'9' are considered as potential components
+     * of the group reference.
+     * In case of `${name}` the `name` can consist of latin letters 'a'..'z' and 'A'..'Z', or digits '0'..'9'. The first character must be
+     * a letter.
+     * Backslash character '\' can be used to include the succeeding character as a literal in the replacement string, e.g, `\$` or `\\`.
+     * [Regex.escapeReplacement] can be used if [replacement] have to be treated as a literal string.
+     *
+     * @param input the char sequence to find matches of this regular expression in
+     * @param replacement the expression to replace found matches with
+     * @return the result of replacing each occurrence of this regular expression in [input] with the result of evaluating the [replacement] expression
+     * @throws RuntimeException if [replacement] expression is malformed, or capturing group with specified `name` or `index` does not exist
      */
-    public actual fun replace(input: CharSequence, replacement: String): String = input.toString().nativeReplace(nativePattern, replacement)
+    public actual fun replace(input: CharSequence, replacement: String): String {
+        if (!replacement.contains('\\') && !replacement.contains('$')) {
+            return input.toString().nativeReplace(nativePattern, replacement)
+        }
+        return replace(input) { substituteGroupRefs(it.asDynamic().nativeMatch, replacement) }
+    }
 
     /**
      * Replaces all occurrences of this regular expression in the specified [input] string with the result of
@@ -181,8 +200,18 @@ public actual class Regex actual constructor(pattern: String, options: Set<Regex
      * @param replacement A replacement expression that can include substitutions. See [String.prototype.replace](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace) function docs for details.
      */
     public actual fun replaceFirst(input: CharSequence, replacement: String): String {
-        val nonGlobalOptions = options.map { it.value }.joinToString(separator = "")
-        return input.toString().nativeReplace(RegExp(pattern, nonGlobalOptions), replacement)
+        if (!replacement.contains('\\') && !replacement.contains('$')) {
+            val nonGlobalOptions = options.toFlags("u")
+            return input.toString().nativeReplace(RegExp(pattern, nonGlobalOptions), replacement)
+        }
+
+        val match = find(input) ?: return input.toString()
+
+        return buildString {
+            append(input.substring(0, match.range.first))
+            append(substituteGroupRefs(match.asDynamic().nativeMatch, replacement))
+            append(input.substring(match.range.last + 1, input.length))
+        }
     }
 
     /**
@@ -266,10 +295,10 @@ public actual class Regex actual constructor(pattern: String, options: Set<Regex
          * Returns a literal replacement expression for the specified [literal] string.
          * No characters of that string will have special meaning when it is used as a replacement string in [Regex.replace] function.
          */
-        public actual fun escapeReplacement(literal: String): String = literal.nativeReplace(replacementEscape, "$$$$")
+        public actual fun escapeReplacement(literal: String): String = literal.nativeReplace(replacementEscape, "\\$&")
 
         private val patternEscape = RegExp("""[\\^$*+?.()|[\]{}]""", "g")
-        private val replacementEscape = RegExp("""\$""", "g")
+        private val replacementEscape = RegExp("""[\$]""", "g")
     }
 }
 
@@ -282,6 +311,9 @@ private fun RegExp.findNext(input: String, from: Int, nextPattern: RegExp): Matc
     val range = match.index..lastIndex - 1
 
     return object : MatchResult {
+        @JsName("nativeMatch")
+        val nativeMatch: RegExpMatch = match
+
         override val range: IntRange = range
         override val value: String
             get() = match[0]!!
@@ -309,4 +341,89 @@ private fun RegExp.findNext(input: String, from: Int, nextPattern: RegExp): Matc
         override fun next(): MatchResult? =
             nextPattern.findNext(input, if (range.isEmpty()) range.start + 1 else range.endInclusive + 1, nextPattern)
     }
+}
+
+private fun substituteGroupRefs(match: RegExpMatch, replacement: String): String {
+    var index = 0
+    val result = StringBuilder()
+
+    while (index < replacement.length) {
+        val char = replacement[index++]
+        if (char == '\\') {
+            if (index == replacement.length)
+                throw IllegalArgumentException("The Char to be escaped is missing")
+
+            result.append(replacement[index++])
+        } else if (char == '$') {
+            if (index == replacement.length)
+                throw IllegalArgumentException("Capturing group index is missing")
+
+            if (replacement[index] == '{') {
+                val endIndex = replacement.readGroupName(++index)
+                val groupName = replacement.substring(index, endIndex)
+
+                if (groupName.isEmpty())
+                    throw IllegalArgumentException("Named capturing group reference should have a non-empty name")
+                if (groupName[0] in '0'..'9')
+                    throw IllegalArgumentException("Named capturing group reference {$groupName} should start with a letter")
+
+                if (endIndex == replacement.length || replacement[endIndex] != '}')
+                    throw IllegalArgumentException("Named capturing group reference is missing trailing '}'")
+
+                val namedGroups = match.asDynamic().groups
+                    ?: throw IllegalArgumentException("No named capturing group was defined but group with name {$groupName} was referenced")
+                val groupValue = namedGroups[groupName]
+                    ?: throw IllegalArgumentException("Capturing group with name {$groupName} does not exist")
+
+                result.append(groupValue as String)
+                index = endIndex + 1    // skip past '}'
+            } else {
+                if (replacement[index] !in '0'..'9')
+                    throw IllegalArgumentException("Invalid capturing group reference")
+
+                val endIndex = replacement.readGroupIndex(index, match.length)
+                val groupIndex = replacement.substring(index, endIndex).toInt()
+
+                if (groupIndex >= match.length)
+                    throw IndexOutOfBoundsException("Group with index $groupIndex does not exist")
+
+                result.append(match[groupIndex])
+                index = endIndex
+            }
+        } else {
+            result.append(char)
+        }
+    }
+    return result.toString()
+}
+
+private fun String.readGroupName(startIndex: Int): Int {
+    var index = startIndex
+    while (index < length) {
+        val char = this[index]
+        if (char in 'a'..'z' || char in 'A'..'Z' || char in '0'..'9') {
+            index++
+        } else {
+            break
+        }
+    }
+    return index
+}
+
+private fun String.readGroupIndex(startIndex: Int, groupCount: Int): Int {
+    // at least one digit after '$' captured
+    var index = startIndex + 1
+    var groupIndex = this[startIndex] - '0'
+
+    // capture the largest valid group index
+    while (index < length && this[index] in '0'..'9') {
+        val newGroupIndex = (groupIndex * 10) + (this[index] - '0')
+        if (newGroupIndex < groupCount) {
+            groupIndex = newGroupIndex
+            index++
+        } else {
+            break
+        }
+    }
+    return index
 }

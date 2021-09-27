@@ -26,3 +26,5 @@ public actual fun testOnJs(action: () -> Unit) = action()
 public actual val isFloat32RangeEnforced: Boolean = false
 
 actual val supportsSuppressedExceptions: Boolean get() = true
+
+public actual val supportsNamedCapturingGroup: Boolean get() = true

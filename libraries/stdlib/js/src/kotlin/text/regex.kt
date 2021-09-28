@@ -149,7 +149,7 @@ public actual class Regex actual constructor(pattern: String, options: Set<Regex
      * in the replacement string will be substituted with the subsequences corresponding to the captured groups with the specified name or index.
      * In case of `$index` the first digit after '$' is always treated as part of group reference. Subsequent digits are incorporated
      * into `index` only if they would form a valid group reference. Only the digits '0'..'9' are considered as potential components
-     * of the group reference.
+     * of the group reference. Note that indexes of captured groups start from 1, and the group with index 0 is the whole match.
      * In case of `${name}` the `name` can consist of latin letters 'a'..'z' and 'A'..'Z', or digits '0'..'9'. The first character must be
      * a letter.
      * Backslash character '\' can be used to include the succeeding character as a literal in the replacement string, e.g, `\$` or `\\`.
@@ -197,7 +197,20 @@ public actual class Regex actual constructor(pattern: String, options: Set<Regex
     /**
      * Replaces the first occurrence of this regular expression in the specified [input] string with specified [replacement] expression.
      *
-     * @param replacement A replacement expression that can include substitutions. See [String.prototype.replace](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace) function docs for details.
+     * The replacement string may contain references to the captured groups during a match. Occurrences of `${name}` or `$index`
+     * in the replacement string will be substituted with the subsequences corresponding to the captured groups with the specified name or index.
+     * In case of `$index` the first digit after '$' is always treated as part of group reference. Subsequent digits are incorporated
+     * into `index` only if they would form a valid group reference. Only the digits '0'..'9' are considered as potential components
+     * of the group reference. Note that indexes of captured groups start from 1, and the group with index 0 is the whole match.
+     * In case of `${name}` the `name` can consist of latin letters 'a'..'z' and 'A'..'Z', or digits '0'..'9'. The first character must be
+     * a letter.
+     * Backslash character '\' can be used to include the succeeding character as a literal in the replacement string, e.g, `\$` or `\\`.
+     * [Regex.escapeReplacement] can be used if [replacement] have to be treated as a literal string.
+     *
+     * @param input the char sequence to find a match of this regular expression in
+     * @param replacement the expression to replace the found match with
+     * @return the result of replacing the first occurrence of this regular expression in [input] with the result of evaluating the [replacement] expression
+     * @throws RuntimeException if [replacement] expression is malformed, or capturing group with specified `name` or `index` does not exist
      */
     public actual fun replaceFirst(input: CharSequence, replacement: String): String {
         if (!replacement.contains('\\') && !replacement.contains('$')) {

@@ -1376,6 +1376,10 @@ class FirRenderer(builder: StringBuilder, private val mode: RenderMode = RenderM
         print("|")
     }
 
+    override fun visitResolvedReifiedParameterReference(resolvedReifiedParameterReference: FirResolvedReifiedParameterReference) {
+        visitElement(resolvedReifiedParameterReference)
+    }
+
     override fun visitBinaryLogicExpression(binaryLogicExpression: FirBinaryLogicExpression) {
         binaryLogicExpression.leftOperand.accept(this)
         print(" ${binaryLogicExpression.kind.token} ")

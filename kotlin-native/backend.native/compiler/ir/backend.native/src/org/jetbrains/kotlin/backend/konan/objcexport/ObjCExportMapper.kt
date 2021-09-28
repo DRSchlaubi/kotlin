@@ -70,10 +70,7 @@ internal fun ObjCExportMapper.getClassIfCategory(extensionReceiverType: KotlinTy
     }
 }
 
-private fun isSealedClassConstructor(descriptor: ConstructorDescriptor) : Boolean {
-    val containingDeclaration = descriptor.containingDeclaration
-    return containingDeclaration is ClassDescriptor && containingDeclaration.isSealed()
-}
+private fun isSealedClassConstructor(descriptor: ConstructorDescriptor) = descriptor.constructedClass.isSealed()
 
 // Note: partially duplicated in ObjCExportLazyImpl.translateTopLevels.
 internal fun ObjCExportMapper.shouldBeExposed(descriptor: CallableMemberDescriptor): Boolean =

@@ -876,7 +876,7 @@ private fun ObjCExportCodeGenerator.generateObjCImp(
             isDirect = !isVirtual,
             baseMethod = baseMethod
     ) { args, resultLifetime, exceptionHandler ->
-        if (target is IrConstructor && (target.parent as? IrClass)?.isAbstract() == true) {
+        if (target is IrConstructor && target.constructedClass.isAbstract()) {
             callFromBridge(
                     context.llvm.Kotlin_ObjCExport_AbstractClassConstructorCalled,
                     listOf(param(0), codegen.typeInfoValue(target.parent as IrClass))

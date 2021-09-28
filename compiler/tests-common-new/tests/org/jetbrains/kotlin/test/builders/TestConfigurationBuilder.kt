@@ -116,11 +116,16 @@ class TestConfigurationBuilder {
         init: HandlersStepBuilder<I>.() -> Unit
     ): HandlersStepBuilder<I> {
         val step = handlersStep(artifactKind, init)
-        val previouslyContainedStep = namedSteps.put(name, step)
-        if (previouslyContainedStep != null) {
-            error { "Step with name \"$name\" already registered" }
-        }
-        return step
+        val previouslyContainedStep = namedSteps[name]
+
+        return when (previouslyContainedStep) {
+            null -> step
+            is HandlersStepBuilder<*> -> {
+                @Suppress("UNCHECKED_CAST")
+                (previouslyContainedStep as HandlersStepBuilder<I>).compose(step )
+            }
+            else -> error("Unexpected TestStepBuilder ${previouslyContainedStep::class}")
+        }.also { namedSteps[name] = it }
     }
 
     inline fun <I : ResultingArtifact<I>> configureNamedHandlersStep(

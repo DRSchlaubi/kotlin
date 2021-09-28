@@ -34,6 +34,14 @@ class HandlersStepBuilder<I : ResultingArtifact<I>>(val artifactKind: TestArtifa
         handlers += constructors
     }
 
+    fun compose(other: HandlersStepBuilder<I>): HandlersStepBuilder<I> {
+        check(this.artifactKind == other.artifactKind)
+        return HandlersStepBuilder(artifactKind).apply {
+            useHandlers(this.handlers)
+            useHandlers(other.handlers)
+        }
+    }
+
     @TestInfrastructureInternals
     override fun createTestStep(testServices: TestServices): TestStep.HandlersStep<I> {
         return TestStep.HandlersStep(artifactKind, handlers.map { it.invoke(testServices) })

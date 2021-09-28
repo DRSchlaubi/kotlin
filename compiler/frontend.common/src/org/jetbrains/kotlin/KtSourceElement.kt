@@ -182,7 +182,7 @@ sealed class KtFakeSourceElementKind : KtSourceElementKind() {
     object ClassDelegationField : KtFakeSourceElementKind()
 }
 
-abstract class AbstractKtSourceElement {
+sealed class AbstractKtSourceElement {
     abstract val startOffset: Int
     abstract val endOffset: Int
 }

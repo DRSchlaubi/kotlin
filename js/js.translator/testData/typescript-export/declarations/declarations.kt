@@ -111,6 +111,7 @@ class A4 {
         set(value) { field = value * 10 }
 }
 
+@JsExport
 object O0
 
 @JsExport

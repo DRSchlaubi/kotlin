@@ -26,26 +26,32 @@ import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnResolution
 import org.jetbrains.kotlin.gradle.targets.js.yarn.toVersionString
 import org.jetbrains.kotlin.gradle.utils.ArchiveOperationsCompat
 import org.jetbrains.kotlin.gradle.utils.FileSystemOperationsCompat
-import org.jetbrains.kotlin.gradle.utils.LazyWrapper
 import org.jetbrains.kotlin.gradle.utils.unavailableValueError
 
 /**
  * See [KotlinNpmResolutionManager] for details about resolution process.
+ *
+ * This class contains many transient properties to deduplicate data when configuration cache is used.
+ * Regularly tasks share the same instance of this class, but with configuration cache each task that holds a reference to the instance will
+ * create an own copy. We use build services as a single storage for the heavy state of this class.
  */
 internal class KotlinRootNpmResolver internal constructor(
     @Transient
     val nodeJs: NodeJsRootExtension?,
     val forceFullResolve: Boolean
 ) {
-    val rootProject: Project?
-        get() = nodeJs?.rootProject
+    private val nodeJs_
+        get() = nodeJs ?: unavailableValueError("nodeJs")
+
+    private val rootProject: Project
+        get() = nodeJs_.rootProject
 
     private val rootProjectName by lazy {
-        rootProject?.name ?: unavailableValueError("rootProject")
+        rootProject.name
     }
 
     private val rootProjectVersion by lazy {
-        rootProject?.version.toString() ?: unavailableValueError("rootProject")
+        rootProject.version.toString()
     }
 
     enum class State {
@@ -68,14 +74,14 @@ internal class KotlinRootNpmResolver internal constructor(
             }
         }
 
-    private val archiveOperations by lazy { ArchiveOperationsCompat(rootProject ?: unavailableValueError("rootProject")) }
-    private val fs by lazy { FileSystemOperationsCompat(rootProject ?: unavailableValueError("rootProject")) }
+    private val archiveOperations by lazy { ArchiveOperationsCompat(rootProject) }
+    private val fs by lazy { FileSystemOperationsCompat(rootProject) }
 
     internal val gradleNodeModulesProvider: Provider<GradleNodeModulesCache> =
-        (rootProject ?: unavailableValueError("rootProject"))
+        rootProject
             .gradle.sharedServices.registerIfAbsent("gradle-node-modules", GradleNodeModulesCache::class.java) {
-                it.parameters.cacheDir.set((nodeJs ?: unavailableValueError("nodeJs")).nodeModulesGradleCacheDir)
-                it.parameters.rootProjectDir.set((rootProject ?: unavailableValueError("rootProject")).projectDir)
+                it.parameters.cacheDir.set(nodeJs_.nodeModulesGradleCacheDir)
+                it.parameters.rootProjectDir.set(rootProject.projectDir)
             }
 
     val gradleNodeModules: GradleNodeModulesCache
@@ -85,10 +91,10 @@ internal class KotlinRootNpmResolver internal constructor(
         }
 
     internal val compositeNodeModulesProvider: Provider<CompositeNodeModulesCache> =
-        (rootProject ?: unavailableValueError("rootProject"))
+        (rootProject)
             .gradle.sharedServices.registerIfAbsent("composite-node-modules", CompositeNodeModulesCache::class.java) {
-                it.parameters.cacheDir.set((nodeJs ?: unavailableValueError("nodeJs")).nodeModulesGradleCacheDir)
-                it.parameters.rootProjectDir.set((rootProject ?: unavailableValueError("rootProject")).projectDir)
+                it.parameters.cacheDir.set(nodeJs_.nodeModulesGradleCacheDir)
+                it.parameters.rootProjectDir.set(rootProject.projectDir)
             }
 
     val compositeNodeModules: CompositeNodeModulesCache
@@ -103,34 +109,34 @@ internal class KotlinRootNpmResolver internal constructor(
     private val projectResolvers_: MutableMap<String, KotlinProjectNpmResolver>? = mutableMapOf()
 
     @Transient
-    private val yarnEnvironment_: LazyWrapper<YarnEnv>? = LazyWrapper {
-        YarnPlugin.apply(rootProject ?: unavailableValueError("rootProject")).requireConfigured()
+    private val yarnEnvironment_: Provider<YarnEnv>? = rootProject.provider {
+        YarnPlugin.apply(rootProject).requireConfigured()
     }
 
     @Transient
-    private val npmEnvironment_: LazyWrapper<NpmEnvironment>? = LazyWrapper {
-        (nodeJs ?: unavailableValueError("nodeJs")).asNpmEnvironment
+    private val npmEnvironment_: Provider<NpmEnvironment>? = rootProject.provider {
+        nodeJs_.asNpmEnvironment
     }
 
     @Transient
-    private val yarnResolutions_: LazyWrapper<List<YarnResolution>>? = LazyWrapper {
-        YarnPlugin.apply(rootProject ?: unavailableValueError("rootProject")).resolutions
+    private val yarnResolutions_: Provider<List<YarnResolution>>? = rootProject.provider {
+        YarnPlugin.apply(rootProject).resolutions
     }
 
     @Transient
-    private val taskRequirements_: TasksRequirements? = (nodeJs ?: unavailableValueError("nodeJs")).taskRequirements
+    private val taskRequirements_: TasksRequirements? = nodeJs_.taskRequirements
 
     private val resolverStateHolder by lazy {
-        (rootProject ?: unavailableValueError("rootProject")).gradle.sharedServices.registerIfAbsent(
+        (rootProject).gradle.sharedServices.registerIfAbsent(
             KotlinRootNpmResolverStateHolder::class.qualifiedName,
             KotlinRootNpmResolverStateHolder::class.java
         ) {
             it.parameters.plugins.set(plugins_)
             it.parameters.projectResolvers.set(projectResolvers_)
-            it.parameters.packageManager.set((nodeJs ?: unavailableValueError("nodeJs")).packageManager)
-            it.parameters.yarnEnvironment.set(yarnEnvironment_?.value)
-            it.parameters.npmEnvironment.set(npmEnvironment_?.value)
-            it.parameters.yarnResolutions.set(yarnResolutions_?.value)
+            it.parameters.packageManager.set(nodeJs_.packageManager)
+            it.parameters.yarnEnvironment.set(yarnEnvironment_?.get())
+            it.parameters.npmEnvironment.set(npmEnvironment_?.get())
+            it.parameters.yarnResolutions.set(yarnResolutions_?.get())
             it.parameters.taskRequirements.set(taskRequirements_)
         }
     }
@@ -160,19 +166,19 @@ internal class KotlinRootNpmResolver internal constructor(
         get() = nodeJs?.packageManager ?: resolverStateHolder.get().parameters.packageManager.get()
 
     private val yarnEnvironment
-        get() = yarnEnvironment_?.value ?: resolverStateHolder.get().parameters.yarnEnvironment.get()
+        get() = yarnEnvironment_?.get() ?: resolverStateHolder.get().parameters.yarnEnvironment.get()
 
     private val npmEnvironment
-        get() = npmEnvironment_?.value ?: resolverStateHolder.get().parameters.npmEnvironment.get()
+        get() = npmEnvironment_?.get() ?: resolverStateHolder.get().parameters.npmEnvironment.get()
 
     private val yarnResolutions
-        get() = yarnResolutions_?.value ?: resolverStateHolder.get().parameters.yarnResolutions.get()
+        get() = yarnResolutions_?.get() ?: resolverStateHolder.get().parameters.yarnResolutions.get()
 
     internal val taskRequirements
         get() = taskRequirements_ ?: resolverStateHolder.get().parameters.taskRequirements.get()
 
     internal val mayBeUpToDateTasksRegistry =
-        MayBeUpToDatePackageJsonTasksRegistry.registerIfAbsent(rootProject ?: unavailableValueError("rootProject"))
+        MayBeUpToDatePackageJsonTasksRegistry.registerIfAbsent(rootProject)
 
     fun alreadyResolvedMessage(action: String) = "Cannot $action. NodeJS projects already resolved."
 

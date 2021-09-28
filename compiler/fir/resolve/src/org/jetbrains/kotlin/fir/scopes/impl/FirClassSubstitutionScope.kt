@@ -174,7 +174,9 @@ class FirClassSubstitutionScope(
         if (substitutor == ConeSubstitutor.Empty) return original
         val constructor = original.fir
 
-        val (newTypeParameters, _, _, newReturnType, newSubstitutor, fakeOverrideSubstitution) = createSubstitutedData(constructor)
+        val (newTypeParameters, newDispatchReceiverType, _, newReturnType, newSubstitutor, fakeOverrideSubstitution) =
+            createSubstitutedData(constructor)
+
         val newParameterTypes = constructor.valueParameters.map {
             it.returnTypeRef.coneType.substitute(newSubstitutor)
         }
@@ -185,8 +187,14 @@ class FirClassSubstitutionScope(
 
         return FirFakeOverrideGenerator.createSubstitutionOverrideConstructor(
             FirConstructorSymbol(original.callableId),
-            session, constructor, dispatchReceiverTypeForSubstitutedMembers,
-            newReturnType, newParameterTypes, newTypeParameters, makeExpect, fakeOverrideSubstitution
+            session,
+            constructor,
+            newDispatchReceiverType,
+            newReturnType,
+            newParameterTypes,
+            newTypeParameters,
+            makeExpect,
+            fakeOverrideSubstitution
         ).symbol
     }
 

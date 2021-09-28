@@ -131,6 +131,11 @@ abstract class BaseFirBuilder<T>(val baseSession: FirSession, val context: Conte
 
     fun currentDispatchReceiverType(): ConeClassLikeType? = context.dispatchReceiverTypesStack.lastOrNull()
 
+    /**
+     * @return second from the end dispatch receiver. For the inner class constructor it would be the outer class.
+     */
+    protected fun dispatchReceiverForInnerClassConstructor() = context.dispatchReceiverTypesStack.dropLast(1).lastOrNull()
+
     fun callableIdForClassConstructor() =
         if (context.className == FqName.ROOT) CallableId(context.packageFqName, Name.special("<anonymous-init>"))
         else CallableId(context.packageFqName, context.className, context.className.shortName())

@@ -497,6 +497,23 @@ ALWAYS_INLINE inline R CallWithThreadState(R(*function)(Args...), Args... args) 
     return function(std::forward<Args>(args)...);
 }
 
+// TODO: Naming?
+class NativeOrUnregisteredThreadGuard final : private MoveOnly {
+public:
+    NativeOrUnregisteredThreadGuard() : NativeOrUnregisteredThreadGuard(false) {};
+
+    explicit NativeOrUnregisteredThreadGuard(bool reentrant) noexcept {
+        // The default ctor of ThreadStateGuard doesn't set the state.
+        // So the actual state switching is performed only if the thread is registered.
+        if (kotlin::mm::IsCurrentThreadRegistered()) {
+            backingGuard_ = kotlin::ThreadStateGuard(kotlin::ThreadState::kNative, reentrant);
+        }
+    }
+
+private:
+    ThreadStateGuard backingGuard_;
+};
+
 extern const bool kSupportsMultipleMutators;
 
 } // namespace kotlin

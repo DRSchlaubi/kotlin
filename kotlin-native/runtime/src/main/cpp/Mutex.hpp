@@ -27,6 +27,12 @@ namespace kotlin {
 class SpinLock : private Pinned {
 public:
     void lock() noexcept {
+        // Fast path without thread state switching.
+        if (__sync_bool_compare_and_swap(&atomicInt, 0, 1)) {
+            return;
+        }
+
+        kotlin::NativeOrUnregisteredThreadGuard guard(/* reentrant = */ true);
         while (!__sync_bool_compare_and_swap(&atomicInt, 0, 1)) {
             // TODO: yield.
         }

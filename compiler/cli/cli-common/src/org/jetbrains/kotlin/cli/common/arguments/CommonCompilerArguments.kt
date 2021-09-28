@@ -542,9 +542,9 @@ abstract class CommonCompilerArguments : CommonToolArguments() {
     }
 
     fun toLanguageVersionSettings(collector: MessageCollector): LanguageVersionSettings {
-
         // If only "-api-version" is specified, language version is assumed to be the latest stable
-        val languageVersion = parseVersion(collector, languageVersion, "language") ?: LanguageVersion.LATEST_STABLE
+        val languageVersion = parseVersion(collector, languageVersion, "language")
+            ?: defaultLanguageVersion()
 
         // If only "-language-version" is specified, API version is assumed to be equal to the language version
         // (API version cannot be greater than the language version)
@@ -564,6 +564,8 @@ abstract class CommonCompilerArguments : CommonToolArguments() {
             checkOutdatedVersions(languageVersion, apiVersion, collector)
             checkProgressiveMode(languageVersion, collector)
         }
+
+        checkPlatformSpecificSettings(languageVersionSettings, collector)
 
         return languageVersionSettings
     }
@@ -631,6 +633,12 @@ abstract class CommonCompilerArguments : CommonToolArguments() {
                         "or turning off progressive mode."
             )
         }
+    }
+
+    protected open fun defaultLanguageVersion(): LanguageVersion =
+        LanguageVersion.LATEST_STABLE
+
+    protected open fun checkPlatformSpecificSettings(languageVersionSettings: LanguageVersionSettings, collector: MessageCollector) {
     }
 
     private enum class VersionKind(val text: String) {
